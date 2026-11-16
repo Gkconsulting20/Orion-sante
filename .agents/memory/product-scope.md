@@ -9,11 +9,11 @@ Le logiciel s’ajoute à l’univers de ComptaOrion et cible les cliniques et h
 
 **How to apply:** Garder une terminologie de santé (patients, dossiers, soins) et relier le dossier patient à la facturation, aux paiements et aux reçus.
 
-Le créateur ne veut pas acheter de nouveau domaine et souhaite un sous-domaine du domaine existant.
+Le créateur possède le domaine `comptaorion.com`. Il ne veut pas acheter de nouveau domaine et souhaite un sous-domaine du domaine existant.
 
 **Why:** Le créateur l’a demandé explicitement.
 
-**How to apply:** Demander le domaine et les accès de configuration appropriés au moment du raccordement, sans inventer une URL de production.
+**How to apply:** Préparer un sous-domaine de `comptaorion.com` et demander les informations de configuration appropriées au moment du raccordement, sans présenter une adresse proposée comme déjà active.
 
 La liste de fonctionnalités hospitalières trouvée sur internet est une référence, pas une demande de tout implémenter. Le créateur précise : « le but n'est pas d'implementer toutes les fonctionnalité mais de faire un logiciel moderne et complet pour le domaine de la santé surtout en afrique ».
 
