@@ -1,36 +1,386 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Orion Santé
 servers:
   - url: /api
-    description: Base API path
-tags:
-  - name: health
-    description: Health operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
-      tags: [health]
-      summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/HealthStatus"
+              schema: { $ref: "#/components/schemas/HealthStatus" }
+  /workspace:
+    get:
+      operationId: getWorkspace
+      responses:
+        "200":
+          description: Current clinic records, isolated per account or demo browser
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Workspace" }
+  /dashboard:
+    get:
+      operationId: getDashboard
+      responses:
+        "200":
+          description: Aggregated clinic activity
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Dashboard" }
+  /patients:
+    post:
+      operationId: createPatient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PatientInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Patient" }
+  /patients/{id}:
+    put:
+      operationId: updatePatient
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PatientInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Patient" }
+  /visits:
+    post:
+      operationId: createVisit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VisitInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Visit" }
+  /visits/{id}:
+    put:
+      operationId: updateVisit
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VisitInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Visit" }
+  /invoices:
+    post:
+      operationId: createInvoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InvoiceInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Invoice" }
+  /payments:
+    post:
+      operationId: createPayment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PaymentInput" }
+      responses:
+        "201":
+          description: Payment and unique receipt created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Payment" }
+  /expenses:
+    post:
+      operationId: createExpense
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ExpenseInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Expense" }
+  /settings:
+    put:
+      operationId: updateSettings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Settings" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Settings" }
+  /cash-session:
+    post:
+      operationId: setCashSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CashSessionInput" }
+      responses:
+        "200":
+          description: Cash session updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CashSession" }
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
-        status:
-          type: string
-      required:
-        - status
-
+        status: { type: string }
+    PatientInput:
+      type: object
+      required: [firstName, lastName, sex, birthDate, phone, address, emergencyContact, allergies]
+      properties:
+        firstName: { type: string, minLength: 1, maxLength: 100 }
+        lastName: { type: string, minLength: 1, maxLength: 100 }
+        sex: { type: string, enum: [F, M] }
+        birthDate: { type: string }
+        phone: { type: string, maxLength: 30 }
+        address: { type: string, maxLength: 300 }
+        emergencyContact: { type: string, maxLength: 300 }
+        allergies: { type: string, maxLength: 2000 }
+    Patient:
+      allOf:
+        - { $ref: "#/components/schemas/PatientInput" }
+        - type: object
+          required: [id, number, createdAt]
+          properties:
+            id: { type: string }
+            number: { type: string }
+            createdAt: { type: string }
+    VisitInput:
+      type: object
+      required: [patientId, service, practitioner, scheduledAt, status, reason, notes, prescription, temperature, bloodPressure, weight]
+      properties:
+        patientId: { type: string, minLength: 1 }
+        service: { type: string, minLength: 1, maxLength: 100 }
+        practitioner: { type: string, minLength: 1, maxLength: 100 }
+        scheduledAt: { type: string }
+        status: { type: string, enum: [scheduled, waiting, in_progress, completed, cancelled] }
+        reason: { type: string, maxLength: 1000 }
+        notes: { type: string, maxLength: 10000 }
+        prescription: { type: string, maxLength: 5000 }
+        temperature: { type: string, maxLength: 20 }
+        bloodPressure: { type: string, maxLength: 30 }
+        weight: { type: string, maxLength: 20 }
+    Visit:
+      allOf:
+        - { $ref: "#/components/schemas/VisitInput" }
+        - type: object
+          required: [id, createdAt]
+          properties:
+            id: { type: string }
+            createdAt: { type: string }
+    InvoiceLine:
+      type: object
+      required: [label, quantity, unitPrice]
+      properties:
+        label: { type: string, minLength: 1, maxLength: 200 }
+        quantity: { type: integer, minimum: 1, maximum: 1000 }
+        unitPrice: { type: integer, minimum: 0, maximum: 100000000 }
+    InvoiceInput:
+      type: object
+      required: [patientId, service, lines]
+      properties:
+        patientId: { type: string, minLength: 1 }
+        visitId: { type: string }
+        service: { type: string, minLength: 1 }
+        lines:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items: { $ref: "#/components/schemas/InvoiceLine" }
+    Invoice:
+      allOf:
+        - { $ref: "#/components/schemas/InvoiceInput" }
+        - type: object
+          required: [id, number, total, paid, status, createdAt]
+          properties:
+            id: { type: string }
+            number: { type: string }
+            total: { type: integer }
+            paid: { type: integer }
+            status: { type: string, enum: [unpaid, partial, paid] }
+            createdAt: { type: string }
+    PaymentInput:
+      type: object
+      required: [invoiceId, amount, method, reference, requestId]
+      properties:
+        invoiceId: { type: string }
+        amount: { type: integer, minimum: 1, maximum: 100000000 }
+        method: { type: string, enum: [cash, tmoney, flooz, bank] }
+        reference: { type: string, maxLength: 100 }
+        requestId: { type: string, minLength: 1, maxLength: 100 }
+    Payment:
+      allOf:
+        - { $ref: "#/components/schemas/PaymentInput" }
+        - type: object
+          required: [id, receiptNumber, patientId, createdAt]
+          properties:
+            id: { type: string }
+            receiptNumber: { type: string }
+            patientId: { type: string }
+            createdAt: { type: string }
+    ExpenseInput:
+      type: object
+      required: [label, supplier, category, amount, method]
+      properties:
+        label: { type: string, minLength: 1, maxLength: 300 }
+        supplier: { type: string, maxLength: 200 }
+        category: { type: string, enum: [supplies, salary, utilities, equipment, other] }
+        amount: { type: integer, minimum: 1, maximum: 100000000 }
+        method: { type: string, enum: [cash, tmoney, flooz, bank] }
+    Expense:
+      allOf:
+        - { $ref: "#/components/schemas/ExpenseInput" }
+        - type: object
+          required: [id, createdAt]
+          properties:
+            id: { type: string }
+            createdAt: { type: string }
+    Service:
+      type: object
+      required: [id, name, price]
+      properties:
+        id: { type: string }
+        name: { type: string, minLength: 1 }
+        price: { type: integer, minimum: 0 }
+    Settings:
+      type: object
+      required: [clinicName, address, phone, email, receiptFooter, services, practitioners]
+      properties:
+        clinicName: { type: string, minLength: 1, maxLength: 150 }
+        address: { type: string, maxLength: 300 }
+        phone: { type: string, maxLength: 30 }
+        email: { type: string, maxLength: 150 }
+        receiptFooter: { type: string, maxLength: 500 }
+        services:
+          type: array
+          items: { $ref: "#/components/schemas/Service" }
+        practitioners:
+          type: array
+          items: { type: string }
+    CashSessionInput:
+      type: object
+      required: [action, openingBalance]
+      properties:
+        action: { type: string, enum: [open, close] }
+        openingBalance: { type: integer, minimum: 0, maximum: 100000000 }
+    CashSession:
+      type: object
+      required: [isOpen, openingBalance, openedAt, closedAt, closingBalance]
+      properties:
+        isOpen: { type: boolean }
+        openingBalance: { type: integer }
+        openedAt: { type: string }
+        closedAt: { type: string }
+        closingBalance: { type: integer }
+    Activity:
+      type: object
+      required: [id, label, createdAt, kind]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        createdAt: { type: string }
+        kind: { type: string }
+    Workspace:
+      type: object
+      required: [isDemo, role, patients, visits, invoices, payments, expenses, settings, cashSession, activity]
+      properties:
+        isDemo: { type: boolean }
+        role: { type: string }
+        patients:
+          type: array
+          items: { $ref: "#/components/schemas/Patient" }
+        visits:
+          type: array
+          items: { $ref: "#/components/schemas/Visit" }
+        invoices:
+          type: array
+          items: { $ref: "#/components/schemas/Invoice" }
+        payments:
+          type: array
+          items: { $ref: "#/components/schemas/Payment" }
+        expenses:
+          type: array
+          items: { $ref: "#/components/schemas/Expense" }
+        settings: { $ref: "#/components/schemas/Settings" }
+        cashSession: { $ref: "#/components/schemas/CashSession" }
+        activity:
+          type: array
+          items: { $ref: "#/components/schemas/Activity" }
+    RevenuePoint:
+      type: object
+      required: [date, receipts, expenses]
+      properties:
+        date: { type: string }
+        receipts: { type: integer }
+        expenses: { type: integer }
+    ServiceTotal:
+      type: object
+      required: [name, amount, count]
+      properties:
+        name: { type: string }
+        amount: { type: integer }
+        count: { type: integer }
+    Dashboard:
+      type: object
+      required: [patientsTotal, patientsToday, visitsToday, waitingToday, receiptsToday, receiptsMonth, unpaidTotal, expensesMonth, revenue, services]
+      properties:
+        patientsTotal: { type: integer }
+        patientsToday: { type: integer }
+        visitsToday: { type: integer }
+        waitingToday: { type: integer }
+        receiptsToday: { type: integer }
+        receiptsMonth: { type: integer }
+        unpaidTotal: { type: integer }
+        expensesMonth: { type: integer }
+        revenue:
+          type: array
+          items: { $ref: "#/components/schemas/RevenuePoint" }
+        services:
+          type: array
+          items: { $ref: "#/components/schemas/ServiceTotal" }

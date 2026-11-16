@@ -1,45 +1,33 @@
-# [Project name]
-
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+# Orion Santé
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- `pnpm --filter @workspace/api-server run dev` — managed API workflow
+- `pnpm --filter @workspace/orion-sante run dev` — managed web workflow
+- `pnpm run typecheck` — type checks
+- `pnpm --filter @workspace/api-spec run codegen` — regenerate API client and server validators after contract edits
+- `pnpm --filter @workspace/db run push` — apply development schema
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+React + Vite, Express 5, PostgreSQL/Drizzle, OpenAPI/Orval, React Query, Clerk.
+Use managed artifact workflows, not standalone dev processes. Web app preview is `/`; shared API is `/api`.
 
-## Where things live
+## Data and financial integrity
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- Clinic data is isolated by verified Clerk user ID. Anonymous demonstrations use a separate opaque HttpOnly cookie; never use an anonymous cookie to authorize a signed-in clinic.
+- Each account owns its own clinic. This version has no shared team invitations or staff RBAC.
+- Each clinic is a PostgreSQL JSONB aggregate. Financial mutations acquire a row lock, check balances, and save atomically.
+- Issued invoices and payments are not deletable or editable. Payment request IDs are idempotent; receipt and invoice numbers are allocated inside the transaction.
+- Prices and amounts are integer XOF; Togo dates use Africa/Lome (UTC).
+- Mobile-money methods record externally confirmed payments; no automatic TMoney/Flooz collection integration exists.
+- Anonymous demonstration records are fictitious. Signed-in clinics start empty. Never seed medical examples into a real account.
+- Reports are operational financial reports, not a certified general ledger or a compliance certification. Review local accounting, privacy, hosting and operational requirements before real patient use.
 
-## Architecture decisions
+## Key locations
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
-
-## Product
-
-_Describe the high-level user-facing capabilities of this app once they exist._
-
-## User preferences
-
-_Populate as you build — explicit user instructions worth remembering across sessions._
-
-## Gotchas
-
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- `lib/api-spec/openapi.yaml` — source of truth for contracts
+- `lib/db/src/schema/clinics.ts` — persisted clinics
+- `artifacts/api-server/src/routes/clinic.ts` — validations, transaction boundary, clinic authorization
+- `artifacts/api-server/src/lib/clinic-data.ts` — demo seed, dashboard totals and cash balance
+- `artifacts/orion-sante/src/` — frontend

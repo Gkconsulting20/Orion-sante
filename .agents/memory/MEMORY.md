@@ -1,0 +1,2 @@
+- [Positionnement Orion Santé](product-scope.md) — application santé de ComptaOrion, lancement au Togo, sous-domaine existant et périmètre volontairement ciblé.
+- [Cache des dépendances Vite](vite-dependency-cache.md) — après un changement de version React, un redémarrage peut conserver un ancien React DOM optimisé.
