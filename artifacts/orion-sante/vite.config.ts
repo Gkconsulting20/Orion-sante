@@ -5,29 +5,22 @@ import { defineConfig } from 'vite';
 
 import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
 
-const rawPort = process.env.PORT;
-
-if (!rawPort) {
-  throw new Error(
-    'PORT environment variable is required but was not provided.',
-  );
-}
-
-const port = Number(rawPort);
-
-if (Number.isNaN(port) || port <= 0) {
-  throw new Error(`Invalid PORT value: "${rawPort}"`);
-}
-
-const basePath = process.env.BASE_PATH;
-
-if (!basePath) {
-  throw new Error(
-    'BASE_PATH environment variable is required but was not provided.',
-  );
-}
-
-export default defineConfig({
+export default defineConfig(async ({ command }) => {
+  // A build writes static files; it does not listen on a port. Keep the
+  // workflow's explicit port/base requirements when starting a dev server.
+  const rawPort = process.env.PORT;
+  const port = rawPort ? Number(rawPort) : undefined;
+  if (port !== undefined && (!Number.isInteger(port) || port <= 0 || port > 65535)) {
+    throw new Error('PORT must be an integer between 1 and 65535.');
+  }
+  if (command === 'serve' && port === undefined) {
+    throw new Error('PORT environment variable is required to start the server.');
+  }
+  const basePath = process.env.BASE_PATH || (command === 'build' ? '/' : undefined);
+  if (!basePath) {
+    throw new Error('BASE_PATH environment variable is required to start the server.');
+  }
+  return {
   base: basePath,
   plugins: [
     react(),
@@ -78,4 +71,5 @@ export default defineConfig({
     host: '0.0.0.0',
     allowedHosts: true,
   },
+  };
 });

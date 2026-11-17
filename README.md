@@ -96,6 +96,9 @@ Pour un hébergement différent, prévoir le routage de ces deux services sur la
 # Vérification TypeScript de tous les packages
 pnpm run typecheck
 
+# Compilation de l’API et de l’interface métier, sans l’outil de maquette
+pnpm run build
+
 # Régénération du client et des validateurs après modification d’OpenAPI
 pnpm --filter @workspace/api-spec run codegen
 
@@ -139,6 +142,12 @@ La version est maintenant épinglée dans le `package.json` racine :
 Cloudflare Workers Builds doit sélectionner cette version. Si nécessaire, vérifier également la variable de **build** `PNPM_VERSION=10.26.1`, le répertoire racine sélectionné et le commit utilisé.
 
 La correction de cette erreur d’installation ne prouve pas que la compilation ou le déploiement complet réussit.
+
+### Compilation sans `PORT`
+
+La commande racine `pnpm run build` compile uniquement l’API et l’interface Orion Santé après vérification TypeScript. Elle ne compile pas l’outil de maquette, qui n’est pas une partie du logiciel publié.
+
+La compilation Vite d’Orion Santé n’exige pas de port d’écoute. Sans `BASE_PATH`, elle produit une interface à la racine (`/`). Les serveurs de développement continuent d’exiger leurs paramètres explicites. Cela ne fournit pas, à lui seul, un point d’entrée Cloudflare Worker.
 
 ### Si un nouveau commit ne déclenche pas de build
 
