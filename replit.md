@@ -19,6 +19,7 @@ Use managed artifact workflows, not standalone dev processes. Web app preview is
 - `pnpm run cf:check` builds frontend + dry-run Worker, without publishing.
 - `pnpm --filter @workspace/api-server run cf:test:runtime` checks the API journey in local workerd after the dry-run.
 - `pnpm run cf:deploy:preview:secure` uploads a preview version to the existing **main** `orion-sante` Worker. It must not create a second Worker or deploy the version to production traffic.
+- Workers Builds for `main` must run `pnpm run typecheck`, then `pnpm run cf:deploy:preview:secure`, until production is separately approved. Branch-isolated automatic Previews are disabled; existing main-Worker version URLs remain available.
 - No build command migrates data or changes DNS. Remote PostgreSQL connectivity and Clerk must be validated on the actual Cloudflare preview before production approval.
 
 ## Data and financial integrity
@@ -49,4 +50,4 @@ The creator approved a separate Neon PostgreSQL database for Cloudflare producti
 - Region: `aws-eu-central-1` (Frankfurt)
 - The `public.clinics` schema has been initialized without application records.
 - The current Replit preview still uses its existing development `DATABASE_URL`; it was not replaced.
-- Cloudflare connectivity and secret injection are not configured yet. Never print or commit a connection string, and never treat creation of this database as proof of a successful Cloudflare deployment.
+- Cloudflare preview connectivity and version secrets were verified during preparation. Production traffic has not been promoted. Never print or commit a connection string; verify the uploaded preview and the unchanged active deployment after synchronization.

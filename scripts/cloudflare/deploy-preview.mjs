@@ -38,10 +38,12 @@ function run(args, extra = {}) {
   if (result.status !== 0) throw new Error(`Command failed: ${args.slice(0, 3).join(" ")} (exit ${result.status})`);
 }
 
-const accounts = await cloudflare("/accounts");
-const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ??
-  (accounts.length === 1 ? accounts[0].id : undefined);
-if (!accountId || !accounts.some((account) => account.id === accountId)) {
+let accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+if (!accountId) {
+  const accounts = await cloudflare("/accounts");
+  if (accounts.length === 1) accountId = accounts[0].id;
+}
+if (!accountId || !/^[a-f0-9]{32}$/i.test(accountId)) {
   throw new Error("Select the intended Cloudflare account with CLOUDFLARE_ACCOUNT_ID.");
 }
 const target = "orion-sante";
