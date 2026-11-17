@@ -20,7 +20,7 @@ const NAV = [
 ];
 
 function Mark({ className }: { className?: string }) {
-  return <img src={`${basePath}/logo.svg`} alt="" className={cn("size-9 rounded-xl", className)} />;
+  return <img src={`${basePath}/logo-mark.png`} alt="ComptaOrion" className={cn("size-9 shrink-0 rounded-xl bg-white object-contain", className)} />;
 }
 
 function UserBlock() {

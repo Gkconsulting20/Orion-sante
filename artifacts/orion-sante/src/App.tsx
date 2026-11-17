@@ -48,7 +48,7 @@ const clerkAppearance = {
   options: {
     logoPlacement: "inside" as const,
     logoLinkUrl: basePath || "/",
-    logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
+    logoImageUrl: `${window.location.origin}${basePath}/logo-mark.png`,
   },
   variables: {
     colorPrimary: "hsl(226 49% 24%)",
@@ -78,7 +78,7 @@ const clerkAppearance = {
     formFieldSuccessText: "text-[hsl(172_58%_28%)]",
     alertText: "text-[hsl(226_40%_16%)]",
     logoBox: "justify-center",
-    logoImage: "h-11 w-11",
+    logoImage: "h-11 w-11 rounded-xl bg-white object-contain",
     socialButtonsBlockButton: "border-[hsl(36_18%_82%)] bg-[hsl(42_45%_99%)] hover:bg-[hsl(38_30%_93%)]",
     formButtonPrimary: "bg-[hsl(226_49%_24%)] text-[hsl(40_45%_97%)] font-semibold",
     formFieldInput: "border-[hsl(36_18%_82%)] bg-[hsl(42_45%_99%)] text-[hsl(226_40%_16%)]",
@@ -96,7 +96,7 @@ function AuthLayout({ children }: { children: ReactNode }) {
     <div className="min-h-[100dvh] grid lg:grid-cols-[1fr_1.1fr]">
       <div className="hidden lg:flex flex-col justify-between bg-sidebar text-sidebar-foreground star-field p-10">
         <Link href="/" className="flex items-center gap-3">
-          <img src={`${basePath}/logo.svg`} alt="" className="size-10 rounded-xl" />
+          <img src={`${basePath}/logo-mark.png`} alt="ComptaOrion" className="size-10 rounded-xl bg-white object-contain" />
           <span className="font-display font-semibold text-lg">Orion Santé</span>
         </Link>
         <div>

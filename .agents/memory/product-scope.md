@@ -9,6 +9,12 @@ Le logiciel s’ajoute à l’univers de ComptaOrion et cible les cliniques et h
 
 **How to apply:** Garder une terminologie de santé (patients, dossiers, soins) et relier le dossier patient à la facturation, aux paiements et aux reçus.
 
+Orion Santé doit reprendre le logo original de ComptaOrion.
+
+**Why:** Le créateur a demandé de récupérer le logo dans son application ComptaOrion pour le mettre ici.
+
+**How to apply:** Réutiliser le logo de la marque sans le redessiner ; un cadrage du symbole est adapté aux petits emplacements, en conservant ses formes et ses couleurs.
+
 Le créateur possède le domaine `comptaorion.com`. Il ne veut pas acheter de nouveau domaine et souhaite un sous-domaine du domaine existant.
 
 Le domaine est géré chez Namecheap ; le sous-domaine envisagé est `sante.comptaorion.com`, pas une adresse déjà raccordée.
