@@ -118,20 +118,22 @@ Le sous-domaine envisagé est **`sante.comptaorion.com`** ; cette adresse n’es
 
 ### État de la préparation Cloudflare
 
-**La configuration complète pour Cloudflare reste à finaliser.** Ce dépôt ne contient pas encore de point d’entrée Worker ni de configuration Wrangler déployable pour l’ensemble de l’application. La version actuellement développée utilise un serveur Node.js/Express et PostgreSQL.
+**La configuration complète est préparée et vérifiée en prévisualisation.** Le Worker principal existant `orion-sante` réunit les assets React et l’API Express via le runtime Node-compatible de Cloudflare. L’entrée Workers et la configuration Wrangler se trouvent dans `artifacts/api-server`. Le serveur Node.js habituel reste disponible pour Replit.
 
-La base cible a été créée sur **Neon**, dans un projet séparé nommé **`orion-sante`**, en région **Francfort**. Sa branche `production` contient la structure de stockage de l’application, initialisée sans dossiers de clinique. Les données de démonstration de Replit n’ont pas été transférées et le raccordement depuis Cloudflare n’est pas encore configuré.
+La cible utilise la base PostgreSQL existante **Neon**, projet **`orion-sante`**, région **Francfort**. La connexion depuis Cloudflare a été vérifiée avec TLS. Les essais n’ont utilisé que des dossiers et règlements fictifs dans des démonstrations isolées. Aucune donnée de Replit n’a été transférée et aucune migration n’a été exécutée.
 
 L’aperçu Replit continue d’utiliser sa propre base de développement. Les identifiants de connexion Neon doivent rester dans les outils de secrets de l’hébergement cible, jamais dans GitHub.
 
-Un simple `npx wrangler deploy` à la racine ne suffit donc pas à publier le logiciel complet. Il faut préparer et vérifier :
+La version de test est accessible sur [l’URL de prévisualisation du Worker principal](https://verification-orion-sante.gkconsulting20.workers.dev). **Cette version n’a pas été activée sur le trafic principal ; aucun DNS n’a changé.** Aucun Worker supplémentaire n’est nécessaire.
 
-1. La compilation de l’interface avec ses paramètres et sa clé publique Clerk.
-2. L’exécution de l’API sur une cible compatible, et son routage sous `/api`.
-3. L’accès sécurisé à PostgreSQL depuis l’environnement cible, sans convertir ni déplacer automatiquement les données.
-4. La configuration Clerk et son proxy pour le domaine de publication.
-5. Le circuit patient → facture → règlement → reçu sur l’environnement de prévisualisation.
-6. Le raccordement DNS, une fois le déploiement validé.
+Commandes depuis la racine :
+
+- `pnpm run cf:check` : compilation du frontend et contrôle Wrangler sans publication.
+- `pnpm run cf:deploy:preview:secure` : téléversement d’une **version de prévisualisation**, avec secrets hors Git ; la version active du Worker reste inchangée.
+
+Le parcours patient → facture → règlement → reçu imprimable et persistant a été vérifié dans le navigateur sur Cloudflare, ainsi que la connexion Clerk et la séparation des espaces privé/démonstration. Avant une ouverture réelle, valider les clés Clerk live et son proxy, les sauvegardes et exigences de confidentialité, puis obtenir l’accord distinct pour la publication et les DNS.
+
+Voir [le guide Cloudflare](docs/cloudflare.md) pour les secrets, le routage `/api`, les contrôles et les limites. Ne pas lancer un `wrangler deploy` générique à la racine.
 
 ### Erreur `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH`
 

@@ -30,6 +30,10 @@ app.use(
   }),
 );
 app.set("trust proxy", 1);
+app.use("/api", (_req, res, next) => {
+  res.setHeader("Cache-Control", "no-store");
+  next();
+});
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 app.use(cors({ credentials: true, origin: false }));
 app.use(cookieParser());
@@ -37,10 +41,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   clerkMiddleware((req) => ({
-    publishableKey: publishableKeyFromHost(
-      getClerkProxyHost(req) ?? "",
-      process.env.CLERK_PUBLISHABLE_KEY,
-    ),
+    publishableKey: process.env.CLERK_USE_CONFIGURED_KEY === "true"
+      ? process.env.CLERK_PUBLISHABLE_KEY
+      : publishableKeyFromHost(
+          getClerkProxyHost(req) ?? "",
+          process.env.CLERK_PUBLISHABLE_KEY,
+        ),
   })),
 );
 

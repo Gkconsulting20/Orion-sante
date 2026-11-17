@@ -2,3 +2,5 @@
 - [Cache des dépendances Vite](vite-dependency-cache.md) — après un changement de version React, un redémarrage peut conserver un ancien React DOM optimisé.
 - [Accès GitHub](github-access.md) — l’intégration API et l’authentification Git native du projet sont indépendantes ; vérifier le transport Git avant de demander des identifiants.
 - [Outils de build Cloudflare](cloudflare-build-tools.md) — aligner pnpm avant l’installation automatique ; modifier la commande de compilation ne corrige pas cette phase.
+- [Outillage Cloudflare](cloudflare-tooling.md) — compatibilité Miniflare, secrets Wrangler sans stdin réouvrable et connexion de test Clerk sur l'origine distante.
+- [TLS PostgreSQL poolé](postgres-client-tls.md) — pg_stat_ssl peut refléter le lien interne du pooler, pas le chiffrement de la connexion cliente.

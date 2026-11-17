@@ -7,6 +7,11 @@
     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
     "build": "pnpm run typecheck && pnpm --filter @workspace/api-server run build && pnpm --filter @workspace/orion-sante run build",
     "typecheck:libs": "tsc --build",
+    "cf:build": "node scripts/cloudflare/build.mjs",
+    "cf:check": "pnpm run cf:build && pnpm --filter @workspace/api-server run cf:check",
+    "cf:preflight": "pnpm --filter @workspace/db exec node ../../scripts/cloudflare/preflight.mjs",
+    "cf:smoke": "node scripts/cloudflare/smoke.mjs",
+    "cf:deploy:preview:secure": "node scripts/cloudflare/deploy-preview.mjs",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },
   "private": true,

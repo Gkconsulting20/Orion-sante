@@ -1,6 +1,6 @@
-import { useEffect, useRef, type ReactNode } from "react";
-import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
-import { ClerkProvider, SignIn, SignUp, useClerk } from "@clerk/react";
+import { useEffect, useState, type ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ClerkProvider, SignIn, SignUp, useAuth } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
 import { frFR } from "@clerk/localizations";
@@ -21,12 +21,12 @@ import Caisse from "@/pages/caisse";
 import Rapports from "@/pages/rapports";
 import Parametres from "@/pages/parametres";
 
-const queryClient = new QueryClient();
-
-const clerkPubKey = publishableKeyFromHost(
-  window.location.hostname,
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
-);
+const clerkPubKey = import.meta.env.VITE_CLERK_USE_CONFIGURED_KEY === "true"
+  ? import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+  : publishableKeyFromHost(
+      window.location.hostname,
+      import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
+    );
 
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 
@@ -129,23 +129,27 @@ function SignUpPage() {
   );
 }
 
-function ClerkQueryClientCacheInvalidator() {
-  const { addListener } = useClerk();
-  const qc = useQueryClient();
-  const prevUserIdRef = useRef<string | null | undefined>(undefined);
+function ClinicDataProviders() {
+  const [client] = useState(() => new QueryClient());
+  useEffect(() => () => client.clear(), [client]);
+  return (
+    <QueryClientProvider client={client}>
+      <TooltipProvider>
+        <PrintProvider>
+          <AppRoutes />
+        </PrintProvider>
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
 
-  useEffect(() => {
-    const unsubscribe = addListener(({ user }) => {
-      const userId = user?.id ?? null;
-      if (prevUserIdRef.current !== undefined && prevUserIdRef.current !== userId) {
-        qc.clear();
-      }
-      prevUserIdRef.current = userId;
-    });
-    return unsubscribe;
-  }, [addListener, qc]);
-
-  return null;
+function AuthScopedClinicData() {
+  const { userId, isLoaded } = useAuth();
+  if (!isLoaded) return <div role="status" className="p-6 text-muted-foreground">Chargement…</div>;
+  // clear() alone leaves active query observers displaying their previous
+  // results. Remount consumers, forms and printable documents for each identity.
+  return <ClinicDataProviders key={userId ?? "anonymous-demo"} />;
 }
 
 function RoutedErrorBoundary({ children }: { children: ReactNode }) {
@@ -217,15 +221,7 @@ function ClerkProviderWithRoutes() {
       routerPush={(to) => setLocation(stripBase(to))}
       routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
     >
-      <QueryClientProvider client={queryClient}>
-        <ClerkQueryClientCacheInvalidator />
-        <TooltipProvider>
-          <PrintProvider>
-            <AppRoutes />
-          </PrintProvider>
-          <Toaster />
-        </TooltipProvider>
-      </QueryClientProvider>
+      <AuthScopedClinicData />
     </ClerkProvider>
   );
 }

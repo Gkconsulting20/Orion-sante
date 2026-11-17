@@ -13,6 +13,14 @@
 React + Vite, Express 5, PostgreSQL/Drizzle, OpenAPI/Orval, React Query, Clerk.
 Use managed artifact workflows, not standalone dev processes. Web app preview is `/`; shared API is `/api`.
 
+## Cloudflare preparation
+
+- See `docs/cloudflare.md` for the full frontend + Express Workers setup and approval gates.
+- `pnpm run cf:check` builds frontend + dry-run Worker, without publishing.
+- `pnpm --filter @workspace/api-server run cf:test:runtime` checks the API journey in local workerd after the dry-run.
+- `pnpm run cf:deploy:preview:secure` uploads a preview version to the existing **main** `orion-sante` Worker. It must not create a second Worker or deploy the version to production traffic.
+- No build command migrates data or changes DNS. Remote PostgreSQL connectivity and Clerk must be validated on the actual Cloudflare preview before production approval.
+
 ## Data and financial integrity
 
 - Clinic data is isolated by verified Clerk user ID. Anonymous demonstrations use a separate opaque HttpOnly cookie; never use an anonymous cookie to authorize a signed-in clinic.

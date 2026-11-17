@@ -1,0 +1,35 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "orion-sante",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-11-13",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": true,
+  "alias": {
+    "pino-http": "./src/lib/worker-http-logger.ts"
+  },
+  "assets": {
+    "directory": "../orion-sante/dist/public",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api", "/api/*"]
+  },
+  "vars": {
+    "NODE_ENV": "production",
+    "LOG_LEVEL": "info",
+    "CLERK_USE_CONFIGURED_KEY": "true"
+  },
+  "env": {
+    "production": {
+      "name": "orion-sante",
+      "workers_dev": false,
+      "preview_urls": false,
+      "vars": {
+        "NODE_ENV": "production",
+        "LOG_LEVEL": "info",
+        "CLERK_USE_CONFIGURED_KEY": "true",
+        "CLERK_PROXY_URL": "https://sante.comptaorion.com/api/__clerk"
+      }
+    }
+  }
+}
