@@ -50,26 +50,25 @@ depuis Cloudflare ni le fonctionnement du parcours distant.
 Fournir sa connexion via un secret distinct `ORION_PREVIEW_DATABASE_URL` permet
 de préparer ce contrôle sans remplacer la base locale gérée par Replit.
 
-## Synchronisation GitHub en mode prévisualisation
+## Synchronisation GitHub sans publication automatique
 
-Tant que la publication réelle n’est pas autorisée, la branche `main` de
-Workers Builds doit utiliser les réglages suivants :
+Le contrôle automatique de la branche `main` dans Workers Builds utilise :
 
 - Répertoire racine : `/`
-- Commande de build : `pnpm run typecheck`
-- Commande d’envoi : `pnpm run cf:deploy:preview:secure`
-- Les prévisualisations automatiques par branche restent désactivées : seul
-  le mécanisme de versions du Worker principal est utilisé, sans second Worker.
+- Commande de build : `pnpm run build`
+- Commande de déploiement : `pnpm --filter @workspace/api-server run cf:check`
 
-Le script d’envoi construit lui-même les assets avec les bonnes clés publiques,
-contrôle PostgreSQL puis utilise `wrangler versions upload`. Le libellé
-`production_settings` dans l’API Builds désigne les réglages de la branche
-principale, pas une autorisation de promouvoir cette version.
+Malgré le libellé « déploiement », cette seconde commande exécute uniquement
+`wrangler deploy --dry-run` : elle vérifie le bundle sans téléverser ni activer
+de version. Un contrôle vert ne prouve donc ni une mise à jour de la
+prévisualisation ni une publication de production.
 
-Les secrets de build `ORION_PREVIEW_DATABASE_URL`, `CLERK_SECRET_KEY` et
-`CLERK_PUBLISHABLE_KEY` doivent être chiffrés dans Workers Builds.
-`CLOUDFLARE_ACCOUNT_ID` est une variable non secrète ; le jeton d’envoi est
-fourni par le jeton de build Cloudflare déjà associé au dépôt.
+Le script distinct `pnpm run cf:deploy:preview:secure` construit les assets
+avec les bonnes clés publiques, contrôle PostgreSQL puis utilise
+`wrangler versions upload`. Il exige les autorisations d’envoi des assets
+et les secrets de l’environnement sécurisé. Il n’est pas la commande
+automatique de Workers Builds. Les secrets de Replit ne sont pas copiés
+automatiquement dans les variables de build Cloudflare.
 
 L’administration de Builds utilise un **jeton personnel** distinct, avec
 **Workers Builds Configuration / Edit** et **Workers Scripts / Read**.
