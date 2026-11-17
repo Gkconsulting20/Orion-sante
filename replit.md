@@ -31,3 +31,14 @@ Use managed artifact workflows, not standalone dev processes. Web app preview is
 - `artifacts/api-server/src/routes/clinic.ts` — validations, transaction boundary, clinic authorization
 - `artifacts/api-server/src/lib/clinic-data.ts` — demo seed, dashboard totals and cash balance
 - `artifacts/orion-sante/src/` — frontend
+
+## External production database target
+
+The creator approved a separate Neon PostgreSQL database for Cloudflare production.
+
+- Neon project: `orion-sante` (`old-sunset-70783495`)
+- Default branch: `production` (`br-shy-lab-b95muldc`)
+- Region: `aws-eu-central-1` (Frankfurt)
+- The `public.clinics` schema has been initialized without application records.
+- The current Replit preview still uses its existing development `DATABASE_URL`; it was not replaced.
+- Cloudflare connectivity and secret injection are not configured yet. Never print or commit a connection string, and never treat creation of this database as proof of a successful Cloudflare deployment.

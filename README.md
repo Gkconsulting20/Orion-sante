@@ -120,6 +120,10 @@ Le sous-domaine envisagé est **`sante.comptaorion.com`** ; cette adresse n’es
 
 **La configuration complète pour Cloudflare reste à finaliser.** Ce dépôt ne contient pas encore de point d’entrée Worker ni de configuration Wrangler déployable pour l’ensemble de l’application. La version actuellement développée utilise un serveur Node.js/Express et PostgreSQL.
 
+La base cible a été créée sur **Neon**, dans un projet séparé nommé **`orion-sante`**, en région **Francfort**. Sa branche `production` contient la structure de stockage de l’application, initialisée sans dossiers de clinique. Les données de démonstration de Replit n’ont pas été transférées et le raccordement depuis Cloudflare n’est pas encore configuré.
+
+L’aperçu Replit continue d’utiliser sa propre base de développement. Les identifiants de connexion Neon doivent rester dans les outils de secrets de l’hébergement cible, jamais dans GitHub.
+
 Un simple `npx wrangler deploy` à la racine ne suffit donc pas à publier le logiciel complet. Il faut préparer et vérifier :
 
 1. La compilation de l’interface avec ses paramètres et sa clé publique Clerk.

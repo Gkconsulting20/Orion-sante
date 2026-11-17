@@ -21,6 +21,12 @@ Orion Santé doit être relié au dépôt GitHub que le créateur va créer, pui
 
 **How to apply:** Préparer le raccordement GitHub et vérifier la compatibilité du serveur, de la base et de l’authentification avec la cible Cloudflare avant toute publication. Ne pas effectuer de bascule ni de migration de données sans préciser les conséquences.
 
+Le créateur a validé Neon PostgreSQL pour la base de production d’Orion Santé, séparée de la base de développement Replit.
+
+**Why:** Le créateur n’avait pas de base PostgreSQL de production et a choisi « Utiliser Neon ».
+
+**How to apply:** Raccorder la cible Cloudflare à une base Neon dédiée ; ne pas remplacer la base de développement ni copier les données fictives ou des dossiers patients sans accord. Ne pas activer d’option payante sans accord.
+
 La liste de fonctionnalités hospitalières trouvée sur internet est une référence, pas une demande de tout implémenter. Le créateur précise : « le but n'est pas d'implementer toutes les fonctionnalité mais de faire un logiciel moderne et complet pour le domaine de la santé surtout en afrique ».
 
 **Why:** Éviter une accumulation de modules hospitaliers peu adaptés au besoin initial.
