@@ -48,6 +48,12 @@ export function addMonths(dateKey: string, months: number): string {
   return day(d.toISOString());
 }
 
+/** Nombre de jours entiers entre aujourd'hui (UTC) et une date AAAA-MM-JJ (peut être négatif). */
+export function daysUntil(dateKey: string): number {
+  const ms = Date.parse(`${dateKey}T00:00:00Z`) - Date.parse(`${today()}T00:00:00Z`);
+  return Math.round(ms / 86400000);
+}
+
 /** Statut effectif d'un abonnement : un abonnement actif passé d'échéance est expiré. */
 export function effectiveSubscriptionStatus(sub: PlatformSubscription): "active" | "cancelled" | "expired" {
   if (sub.status !== "active") return sub.status;

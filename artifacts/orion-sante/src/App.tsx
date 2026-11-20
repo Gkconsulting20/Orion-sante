@@ -8,6 +8,7 @@ import { Link, Route, Switch, useLocation, Router as WouterRouter } from "wouter
 import { ErrorBoundary } from "@/components/error-boundary";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { captureTrialRef } from "@/lib/trial-ref";
 import NotFound from "@/pages/not-found";
 import { Shell } from "@/components/shell";
 import { PrintProvider } from "@/components/print";
@@ -162,6 +163,11 @@ function RoutedErrorBoundary({ children }: { children: ReactNode }) {
 
 function AppRoutes() {
   const [loc] = useLocation();
+  // Parrainage de l'essai gratuit : un lien /sign-up?ref=… ou /?ref=… mémorise
+  // le commercial avant l'inscription Clerk (qui fait perdre la requête).
+  useEffect(() => {
+    captureTrialRef();
+  }, [loc]);
   if (loc.startsWith("/sign-in") || loc.startsWith("/sign-up")) {
     return (
       <Switch>

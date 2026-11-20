@@ -410,6 +410,46 @@ export interface PlatformMe {
   isPlatformAdmin: boolean;
 }
 
+export interface TrialStartInput {
+  /**
+     * @minLength 1
+     * @maxLength 150
+     */
+  clinicName: string;
+  /**
+     * @minLength 1
+     * @maxLength 150
+     */
+  contactName: string;
+  /**
+     * @minLength 1
+     * @maxLength 30
+     */
+  phone: string;
+  /** @maxLength 150 */
+  email?: string;
+  /** @maxLength 100 */
+  ref?: string;
+}
+
+export type TrialStatusStatus = typeof TrialStatusStatus[keyof typeof TrialStatusStatus];
+
+
+export const TrialStatusStatus = {
+  none: 'none',
+  active: 'active',
+  expired: 'expired',
+  converted: 'converted',
+} as const;
+
+export interface TrialStatus {
+  status: TrialStatusStatus;
+  /** @minimum 0 */
+  daysLeft: number;
+  endDate: string;
+  planName: string;
+}
+
 export interface PlatformPlanInput {
   /**
      * @minLength 1

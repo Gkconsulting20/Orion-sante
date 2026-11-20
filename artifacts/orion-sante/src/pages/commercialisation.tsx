@@ -367,7 +367,7 @@ function SalespeopleTab() {
     }
   }
   async function copyLink(s: PlatformSalesperson) {
-    const link = `${window.location.origin}/inscription?ref=${s.id}`;
+    const link = `${window.location.origin}/sign-up?ref=${s.id}`;
     try {
       await navigator.clipboard.writeText(link);
       setCopied(s.id);
@@ -413,7 +413,7 @@ function SalespeopleTab() {
                       <button className="inline-flex items-center gap-1.5 text-xs rounded-lg border px-2 py-1.5 hover:bg-secondary" onClick={() => copyLink(s)} data-testid={`button-copy-ref-${s.id}`}>
                         {copied === s.id ? <Check className="size-3.5 text-lagoon" /> : <Copy className="size-3.5" />} {copied === s.id ? "Copié !" : "Copier le lien"}
                       </button>
-                      <div className="text-[11px] text-muted-foreground mt-1 num truncate max-w-[220px]">/inscription?ref={s.id}</div>
+                      <div className="text-[11px] text-muted-foreground mt-1 num truncate max-w-[220px]">/sign-up?ref={s.id}</div>
                     </td>
                     <td className="px-3 py-3">
                       <div className="flex gap-1 justify-end">
@@ -433,7 +433,7 @@ function SalespeopleTab() {
         <DialogContent className="max-w-xl max-h-[92dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-display">{editing ? "Modifier le commercial" : "Nouveau commercial"}</DialogTitle>
-            <DialogDescription>Le lien de parrainage /inscription?ref=… est affiché dans le tableau.</DialogDescription>
+            <DialogDescription>Le lien de parrainage /sign-up?ref=… est affiché dans le tableau.</DialogDescription>
           </DialogHeader>
           <form onSubmit={submit} className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-3">
@@ -821,20 +821,24 @@ function GuideTab() {
         <p className="text-muted-foreground">Onglet « Plans tarifaires » → « Nouveau plan ». Indiquez le prix mensuel en FCFA, la période, les limites (utilisateurs, patients, stockage en Go) et les fonctionnalités. Les prix affichés sont provisoires et modifiables à tout moment ; un changement ne touche pas les abonnements déjà créés.</p>
       </section>
       <section>
-        <h4 className="font-semibold mb-1">2. Inscrire une clinique cliente</h4>
+        <h4 className="font-semibold mb-1">2. Essai gratuit en libre-service</h4>
+        <p className="text-muted-foreground">La clinique crée d'abord son compte (« Créer ma clinique » sur la page d'accueil), puis démarre elle-même son essai gratuit de 30 jours depuis son tableau de bord : une carte lui propose l'essai, elle renseigne le nom de la clinique, son contact et son téléphone, et l'essai démarre immédiatement avec un abonnement d'essai. Un seul essai par clinique, non renouvelable par elle-même ; à la fin, l'accès est bloqué jusqu'à la création d'un abonnement payant (voir § 4). Si la clinique est arrivée par un lien de parrainage /sign-up?ref=…, l'essai est attribué au commercial.</p>
+      </section>
+      <section>
+        <h4 className="font-semibold mb-1">3. Inscrire une clinique cliente</h4>
         <p className="text-muted-foreground">Onglet « Cliniques clientes » → « Nouvelle clinique ». La clinique est inscrite en essai gratuit de 30 jours, avec un abonnement d'essai créé automatiquement. Pour lier la fiche à son compte Orion Santé (et appliquer l'abonnement et les limites), renseignez son identifiant Clerk (tableau de bord Clerk → Users → ID commençant par user_…). Sans cet identifiant, la fiche reste un suivi commercial sans blocage d'accès.</p>
       </section>
       <section>
-        <h4 className="font-semibold mb-1">3. Créer un abonnement payant</h4>
+        <h4 className="font-semibold mb-1">4. Créer un abonnement payant</h4>
         <p className="text-muted-foreground">Onglet « Abonnements » : choisissez la clinique, le plan, la date de début et la durée. Une vente confirmée est créée automatiquement (montant = prix × durée, commission selon le commercial assigné, 0 si aucun) et la clinique passe en « Actif ». L'essai en cours est remplacé. Un abonnement expiré (essai ou payant) bloque l'accès de la clinique avec un message explicite ; l'annulation est possible depuis le tableau.</p>
       </section>
       <section>
-        <h4 className="font-semibold mb-1">4. Parrainage et commissions</h4>
-        <p className="text-muted-foreground">Chaque commercial a un lien de parrainage /inscription?ref=… (onglet « Commerciaux », bouton « Copier le lien »). La commission par défaut est de 10 % des ventes issues de ses cliniques ; le taux se règle par commercial. Les ventes sont ventilées par canal dans l'onglet « Ventes » (Commerciaux / Web / Partenaires).</p>
+        <h4 className="font-semibold mb-1">5. Parrainage et commissions</h4>
+        <p className="text-muted-foreground">Chaque commercial a un lien de parrainage /sign-up?ref=… (onglet « Commerciaux », bouton « Copier le lien »). Quand une clinique s'inscrit par ce lien puis démarre son essai gratuit depuis son tableau de bord, l'essai lui est attribué. La commission par défaut est de 10 % des ventes issues de ses cliniques ; le taux se règle par commercial. Les ventes sont ventilées par canal dans l'onglet « Ventes » (Commerciaux / Web / Partenaires).</p>
       </section>
       <section>
-        <h4 className="font-semibold mb-1">5. Ce qui n'est pas encore en place</h4>
-        <p className="text-muted-foreground">Paiement en ligne (FedaPay/Stripe), renouvellement automatique des abonnements, courriels (bienvenue, fin d'essai) et page publique d'inscription qui consomme le paramètre ref= : les abonnements sont créés manuellement par l'administrateur dans cet espace.</p>
+        <h4 className="font-semibold mb-1">6. Ce qui n'est pas encore en place</h4>
+        <p className="text-muted-foreground">Paiement en ligne (FedaPay/Stripe), renouvellement automatique des abonnements et courriels (bienvenue, fin d'essai) : les abonnements sont créés manuellement par l'administrateur dans cet espace.</p>
       </section>
     </div>
   );

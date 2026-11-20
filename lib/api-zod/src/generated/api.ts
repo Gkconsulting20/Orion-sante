@@ -944,6 +944,50 @@ export const GetPlatformMeResponse = zod.object({
 })
 
 
+export const getPlatformTrialStatusResponseDaysLeftMin = 0;
+
+
+
+export const GetPlatformTrialStatusResponse = zod.object({
+  "status": zod.enum(['none', 'active', 'expired', 'converted']),
+  "daysLeft": zod.number().int().min(getPlatformTrialStatusResponseDaysLeftMin),
+  "endDate": zod.string(),
+  "planName": zod.string()
+})
+
+
+export const startPlatformTrialBodyClinicNameMax = 150;
+
+export const startPlatformTrialBodyContactNameMax = 150;
+
+export const startPlatformTrialBodyPhoneMax = 30;
+
+export const startPlatformTrialBodyEmailMax = 150;
+
+export const startPlatformTrialBodyRefMax = 100;
+
+
+
+export const StartPlatformTrialBody = zod.object({
+  "clinicName": zod.string().min(1).max(startPlatformTrialBodyClinicNameMax),
+  "contactName": zod.string().min(1).max(startPlatformTrialBodyContactNameMax),
+  "phone": zod.string().min(1).max(startPlatformTrialBodyPhoneMax),
+  "email": zod.string().max(startPlatformTrialBodyEmailMax).optional(),
+  "ref": zod.string().max(startPlatformTrialBodyRefMax).optional()
+})
+
+export const startPlatformTrialResponseDaysLeftMin = 0;
+
+
+
+export const StartPlatformTrialResponse = zod.object({
+  "status": zod.enum(['none', 'active', 'expired', 'converted']),
+  "daysLeft": zod.number().int().min(startPlatformTrialResponseDaysLeftMin),
+  "endDate": zod.string(),
+  "planName": zod.string()
+})
+
+
 export const getPlatformDashboardResponseRecentClientsItemClinicNameMax = 150;
 
 export const getPlatformDashboardResponseRecentClientsItemContactNameMax = 150;

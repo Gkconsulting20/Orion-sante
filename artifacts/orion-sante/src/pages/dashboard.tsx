@@ -1,15 +1,20 @@
 import { useMemo } from "react";
 import { Link } from "wouter";
-import { Show } from "@clerk/react";
+import { Show, useAuth } from "@clerk/react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ArrowRight, Clock, Activity as ActivityIcon, Receipt, LogIn } from "lucide-react";
-import { useDashboard, useWorkspace } from "@/hooks/use-clinic";
+import { useDashboard, useTrialStatus, useWorkspace } from "@/hooks/use-clinic";
 import { Empty, ErrorState, PageHeader, PageSkeleton, Stat, VisitBadge } from "@/components/kit";
+import { TrialBanner, TrialExpiredPanel, TrialStartCard } from "@/components/trial";
 import { fDate, fTime, fcfa, fullName, num, remaining, todayKey, dayKey, fDateTime } from "@/lib/fmt";
 
 export default function Dashboard() {
   const dash = useDashboard();
   const wsq = useWorkspace();
+  const { userId } = useAuth();
+  // État de l'essai gratuit : actif uniquement pour une clinique connectée.
+  // En mode démo (anonyme), la requête est désactivée et rien ne s'affiche.
+  const trial = useTrialStatus(!!userId);
   const ws = wsq.data;
   const d = dash.data;
 
@@ -23,7 +28,14 @@ export default function Dashboard() {
   const unpaid = useMemo(() => (ws ? ws.invoices.filter((i) => i.status !== "paid").sort((a, b) => remaining(b) - remaining(a)).slice(0, 5) : []), [ws]);
 
   if (dash.isLoading || wsq.isLoading) return <PageSkeleton />;
-  if (dash.error || wsq.error || !d || !ws) return <ErrorState error={dash.error || wsq.error} onRetry={() => { dash.refetch(); wsq.refetch(); }} />;
+  if (dash.error || wsq.error || !d || !ws) {
+    // Essai expiré : l'API bloque l'accès (403) ; on affiche le message
+    // de blocage au lieu de l'erreur générique. On attend d'abord que
+    // l'état de l'essai soit connu.
+    if (trial.isLoading) return <PageSkeleton />;
+    if (trial.data?.status === "expired") return <TrialExpiredPanel />;
+    return <ErrorState error={dash.error || wsq.error} onRetry={() => { dash.refetch(); wsq.refetch(); }} />;
+  }
 
   const pName = (id: string) => fullName(ws.patients.find((p) => p.id === id));
   const svcMax = Math.max(1, ...d.services.map((s) => s.amount));
@@ -50,6 +62,12 @@ export default function Dashboard() {
       )}
 
       <PageHeader eyebrow={ws.settings.clinicName} title="Activité du jour" sub="Patients, file d'attente et encaissements — mis à jour à chaque saisie." />
+
+      {/* Essai gratuit : carte de démarrage, bandeau de suivi ou blocage.
+          Rien en mode démo (anonyme) ni pour une clinique déjà abonnée. */}
+      {!ws.isDemo && trial.data?.status === "active" && <TrialBanner status={trial.data} />}
+      {!ws.isDemo && trial.data?.status === "none" && <TrialStartCard defaultClinicName={ws.settings.clinicName} />}
+      {!ws.isDemo && trial.data?.status === "expired" && <TrialExpiredPanel />}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
         <Stat label="Encaissé aujourd'hui" value={fcfa(d.receiptsToday)} tone="lagoon" testId="stat-receipts-today" className="rise-1" />

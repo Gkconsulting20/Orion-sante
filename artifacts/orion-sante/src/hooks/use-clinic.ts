@@ -3,9 +3,12 @@ import {
   useGetWorkspace,
   useGetDashboard,
   useGetPlatformMe,
+  useGetPlatformTrialStatus,
+  useStartPlatformTrial,
   getGetWorkspaceQueryKey,
   getGetDashboardQueryKey,
   getGetPlatformMeQueryKey,
+  getGetPlatformTrialStatusQueryKey,
   getGetPlatformDashboardQueryKey,
   getGetPlatformClientsQueryKey,
   getGetPlatformSalespeopleQueryKey,
@@ -15,6 +18,7 @@ import {
 } from "@workspace/api-client-react";
 
 export { useGetPlatformMe as usePlatformMe };
+export { useStartPlatformTrial as useStartTrial };
 
 const MAX_POLLS = 20;
 
@@ -38,6 +42,28 @@ export function useDashboard() {
       refetchInterval: (q) => (q.state.dataUpdateCount < MAX_POLLS ? 60_000 : false),
     },
   });
+}
+
+/**
+ * État de l'essai gratuit de la clinique connectée. À n'appeler que pour un
+ * utilisateur connecté (`enabled: !!userId`) : en mode démo (anonyme),
+ * l'API renvoie 401 et rien ne s'affiche.
+ */
+export function useTrialStatus(enabled: boolean) {
+  return useGetPlatformTrialStatus({
+    query: {
+      queryKey: getGetPlatformTrialStatusQueryKey(),
+      staleTime: 15_000,
+      retry: 1,
+      enabled,
+    },
+  });
+}
+
+/** Invalide l'état de l'essai (après son démarrage). */
+export function useRefreshTrial() {
+  const qc = useQueryClient();
+  return () => qc.invalidateQueries({ queryKey: getGetPlatformTrialStatusQueryKey() });
 }
 
 export function useRefresh() {

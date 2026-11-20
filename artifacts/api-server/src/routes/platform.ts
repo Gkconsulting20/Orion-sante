@@ -16,10 +16,12 @@ import {
   CancelPlatformSubscriptionParams,
   GetPlatformClientsResponse, GetPlatformSalespeopleResponse, GetPlatformPlansResponse,
   GetPlatformSubscriptionsResponse, GetPlatformSalesResponse, GetPlatformDashboardResponse,
-  GetPlatformMeResponse,
+  GetPlatformMeResponse, GetPlatformTrialStatusResponse,
+  StartPlatformTrialBody, StartPlatformTrialResponse,
+  type PlatformClient,
 } from "@workspace/api-zod";
 import { id, now, today } from "../lib/clinic-data";
-import { PLATFORM_OWNER, initialPlatformData, platformAudit, addMonths, effectiveSubscriptionStatus, type PlatformData } from "../lib/platform-data";
+import { PLATFORM_OWNER, initialPlatformData, platformAudit, addMonths, daysUntil, effectiveSubscriptionStatus, type PlatformData } from "../lib/platform-data";
 import { getClerkProxyHost } from "../middlewares/clerkProxyMiddleware";
 import { isPlatformAdmin } from "./clinic";
 
@@ -73,6 +75,102 @@ router.get("/platform/me", (req, res): void => {
   res.setHeader("Cache-Control", "no-store");
   res.json(GetPlatformMeResponse.parse({ isPlatformAdmin: isPlatformAdmin(getAuth(req).userId) }));
 });
+
+// ---------- Essai gratuit en libre-service ----------
+// Ces deux routes ne sont PAS réservées aux administrateurs : toute clinique
+// connectée peut connaître l'état de son essai et le démarrer elle-même.
+// Elles sont déclarées avant `router.use("/platform", requireAdmin)`.
+// La démo (sans session Clerk) reçoit 401 : aucun essai en mode anonyme.
+
+/**
+ * État de l'essai gratuit d'une clinique (par son identifiant de compte
+ * `user:<id Clerk>`) : pas d'essai, essai actif, essai expiré ou essai
+ * converti en abonnement payant.
+ */
+function trialStatusFor(data: PlatformData, owner: string) {
+  const none = { status: "none" as const, daysLeft: 0, endDate: "", planName: "" };
+  const client = data.clients.find((c) => c.ownerId === owner);
+  if (!client) return none;
+  // Un abonnement payant actif signifie que l'essai a été converti.
+  const paid = data.subscriptions.find(
+    (s) => s.clientId === client.id && effectiveSubscriptionStatus(s) === "active" && s.amount > 0,
+  );
+  if (paid) {
+    const plan = data.plans.find((p) => p.id === paid.planId);
+    return { status: "converted" as const, daysLeft: Math.max(0, daysUntil(paid.endDate)), endDate: paid.endDate, planName: plan?.name ?? "" };
+  }
+  const trial = data.subscriptions.find((s) => s.clientId === client.id && s.planId === "plan-trial")
+    ?? data.subscriptions.find((s) => s.clientId === client.id && s.amount === 0);
+  if (!trial) return none;
+  const plan = data.plans.find((p) => p.id === trial.planId);
+  const planName = plan?.name ?? "Essai gratuit";
+  if (effectiveSubscriptionStatus(trial) === "expired" || trial.status !== "active") {
+    // Essai expiré, ou annulé (remplacé ou retiré) sans abonnement payant : essai consommé.
+    return { status: "expired" as const, daysLeft: 0, endDate: trial.endDate, planName };
+  }
+  return { status: "active" as const, daysLeft: Math.max(0, daysUntil(trial.endDate)), endDate: trial.endDate, planName };
+}
+
+router.get("/platform/trial/status", handler(async (req, res) => {
+  const userId = getAuth(req).userId;
+  if (!userId) { res.status(401).json({ error: "Connectez-vous pour voir votre essai gratuit." }); return; }
+  const result = await withPlatform(false, (data) =>
+    GetPlatformTrialStatusResponse.parse(trialStatusFor(data, `user:${userId}`)));
+  res.json(result);
+}));
+
+router.post("/platform/trial/start", handler(async (req, res) => {
+  const userId = getAuth(req).userId;
+  if (!userId) { res.status(401).json({ error: "Connectez-vous pour démarrer votre essai gratuit." }); return; }
+  const parsed = StartPlatformTrialBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: "Vérifiez les champs obligatoires." }); return; }
+  const owner = `user:${userId}`;
+  const result = await withPlatform(true, (data) => {
+    // Un seul essai par clinique, non renouvelable par elle-même.
+    const existing = data.clients.find((c) => c.ownerId === owner);
+    if (existing) {
+      fail("Votre clinique a déjà une fiche sur la plateforme (essai ou abonnement). Un seul essai gratuit par clinique : contactez ORIONEXA pour passer à un abonnement payant.", 409);
+    }
+    const trialPlan = data.plans.find((p) => p.id === "plan-trial" && p.active);
+    if (!trialPlan) {
+      fail("L'essai gratuit n'est pas disponible pour le moment. Contactez ORIONEXA.", 503);
+    }
+    // Parrainage : le paramètre ref= désigne un commercial existant et actif.
+    // Un ref inconnu ou inactif est simplement ignoré (source web).
+    const ref = (parsed.data.ref ?? "").trim();
+    const salesperson = ref ? data.salespeople.find((s) => s.id === ref && s.active) : undefined;
+    const start = today();
+    const endDate = addMonths(start, 1);
+    const client: PlatformClient = {
+      id: id(),
+      clinicName: parsed.data.clinicName.trim(),
+      contactName: parsed.data.contactName.trim(),
+      email: (parsed.data.email ?? "").trim(),
+      phone: parsed.data.phone.trim(),
+      status: "trial",
+      source: salesperson ? "commercial" : "web",
+      commercialId: salesperson ? salesperson.id : "",
+      ownerId: owner,
+      planId: trialPlan.id,
+      planAmount: 0,
+      createdAt: now(),
+      lastLoginAt: "",
+    };
+    data.clients.unshift(client);
+    data.subscriptions.unshift({
+      id: id(), clientId: client.id, planId: trialPlan.id, startDate: start,
+      durationMonths: 1, endDate, status: "active", amount: 0, commission: 0,
+    });
+    platformAudit(data, userId, "trial.start", "client", client.id, `Essai gratuit démarré — ${client.clinicName} (30 jours)`);
+    return StartPlatformTrialResponse.parse({
+      status: "active" as const,
+      daysLeft: Math.max(0, daysUntil(endDate)),
+      endDate,
+      planName: trialPlan.name,
+    });
+  });
+  res.status(201).json(result);
+}));
 
 router.use("/platform", requireAdmin);
 

@@ -249,6 +249,29 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/PlatformMe" }
+  /platform/trial/status:
+    get:
+      operationId: getPlatformTrialStatus
+      responses:
+        "200":
+          description: Trial status of the signed-in clinic
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TrialStatus" }
+  /platform/trial/start:
+    post:
+      operationId: startPlatformTrial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TrialStartInput" }
+      responses:
+        "201":
+          description: Trial started
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TrialStatus" }
   /platform/dashboard:
     get:
       operationId: getPlatformDashboard
@@ -749,6 +772,23 @@ components:
       required: [isPlatformAdmin]
       properties:
         isPlatformAdmin: { type: boolean }
+    TrialStartInput:
+      type: object
+      required: [clinicName, contactName, phone]
+      properties:
+        clinicName: { type: string, minLength: 1, maxLength: 150 }
+        contactName: { type: string, minLength: 1, maxLength: 150 }
+        phone: { type: string, minLength: 1, maxLength: 30 }
+        email: { type: string, maxLength: 150 }
+        ref: { type: string, maxLength: 100 }
+    TrialStatus:
+      type: object
+      required: [status, daysLeft, endDate, planName]
+      properties:
+        status: { type: string, enum: [none, active, expired, converted] }
+        daysLeft: { type: integer, minimum: 0 }
+        endDate: { type: string }
+        planName: { type: string }
     PlatformPlan:
       type: object
       required: [id, name, priceMonthly, periodMonths, maxUsers, maxPatients, maxStorageGb, features, active]
