@@ -24,7 +24,7 @@ export function TrialBanner({ status }: { status: TrialStatus }) {
         <p className="text-sm text-muted-foreground mt-1">
           Essai gratuit jusqu'au {fDate(status.endDate)}. Vous avez accès à toutes les fonctionnalités
           d'Orion Santé. À la fin de l'essai, contactez ORIONEXA pour passer à un abonnement payant
-          et garder l'accès à votre clinique.
+          et garder l'accès à votre clinique — les 2 premiers mois de l'abonnement sont gratuits.
         </p>
       </div>
     </div>
@@ -75,7 +75,7 @@ export function TrialStartCard({ defaultClinicName }: { defaultClinicName: strin
             <p className="text-sm text-muted-foreground mt-1">
               Vous pouvez utiliser Orion Santé gratuitement jusqu'au {fDate(done.endDate)}.
               À la fin de l'essai, contactez ORIONEXA pour passer à un abonnement payant et garder
-              l'accès à votre clinique.
+              l'accès à votre clinique — les 2 premiers mois de l'abonnement sont gratuits.
             </p>
           </div>
         </div>
@@ -94,7 +94,8 @@ export function TrialStartCard({ defaultClinicName }: { defaultClinicName: strin
           <p className="text-sm text-muted-foreground mt-1">
             Accès complet à toutes les fonctionnalités : dossiers patients, consultations, rendez-vous,
             facturation, caisse et rapports. Aucun paiement demandé. Un seul essai gratuit par clinique ;
-            à la fin de l'essai, contactez ORIONEXA pour passer à un abonnement payant.
+            à la fin de l'essai, contactez ORIONEXA pour passer à un abonnement payant — les 2 premiers
+            mois de l'abonnement sont gratuits.
           </p>
           <form onSubmit={submit} className="grid sm:grid-cols-2 gap-3 mt-4">
             <Field label="Nom de la clinique">
@@ -132,7 +133,8 @@ export function TrialExpiredPanel() {
         <div className="font-display font-semibold">Votre essai gratuit est terminé</div>
         <p className="text-sm text-muted-foreground mt-1 max-w-md">
           Votre accès à la clinique est bloqué. Écrivez à contact@orionexa.com pour passer à un
-          abonnement payant et retrouver l'accès à votre clinique.
+          abonnement payant et retrouver l'accès à votre clinique — les 2 premiers mois de
+          l'abonnement sont gratuits.
         </p>
       </div>
     </div>

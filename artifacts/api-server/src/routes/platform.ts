@@ -21,7 +21,7 @@ import {
   type PlatformClient,
 } from "@workspace/api-zod";
 import { id, now, today } from "../lib/clinic-data";
-import { PLATFORM_OWNER, initialPlatformData, platformAudit, addMonths, daysUntil, effectiveSubscriptionStatus, type PlatformData } from "../lib/platform-data";
+import { PLATFORM_OWNER, initialPlatformData, platformAudit, addMonths, daysUntil, effectiveSubscriptionStatus, isPaidSubscription, billingStartDateOf, paidMonthsOf, FREE_MONTHS_ON_SUBSCRIPTION, type PlatformData } from "../lib/platform-data";
 import { getClerkProxyHost } from "../middlewares/clerkProxyMiddleware";
 import { isPlatformAdmin } from "./clinic";
 
@@ -92,15 +92,16 @@ function trialStatusFor(data: PlatformData, owner: string) {
   const client = data.clients.find((c) => c.ownerId === owner);
   if (!client) return none;
   // Un abonnement payant actif signifie que l'essai a été converti.
+  // (Détection par le plan, pas par le montant : un abonnement payant de
+  // 2 mois seulement a un montant de 0 FCFA à cause des 2 mois gratuits.)
   const paid = data.subscriptions.find(
-    (s) => s.clientId === client.id && effectiveSubscriptionStatus(s) === "active" && s.amount > 0,
+    (s) => s.clientId === client.id && effectiveSubscriptionStatus(s) === "active" && isPaidSubscription(data, s),
   );
   if (paid) {
     const plan = data.plans.find((p) => p.id === paid.planId);
     return { status: "converted" as const, daysLeft: Math.max(0, daysUntil(paid.endDate)), endDate: paid.endDate, planName: plan?.name ?? "" };
   }
-  const trial = data.subscriptions.find((s) => s.clientId === client.id && s.planId === "plan-trial")
-    ?? data.subscriptions.find((s) => s.clientId === client.id && s.amount === 0);
+  const trial = data.subscriptions.find((s) => s.clientId === client.id && !isPaidSubscription(data, s));
   if (!trial) return none;
   const plan = data.plans.find((p) => p.id === trial.planId);
   const planName = plan?.name ?? "Essai gratuit";
@@ -160,6 +161,8 @@ router.post("/platform/trial/start", handler(async (req, res) => {
     data.subscriptions.unshift({
       id: id(), clientId: client.id, planId: trialPlan.id, startDate: start,
       durationMonths: 1, endDate, status: "active", amount: 0, commission: 0,
+      // L'essai n'est pas un abonnement payant : aucun mois gratuit d'abonnement.
+      freeMonths: 0, billingStartDate: start,
     });
     platformAudit(data, userId, "trial.start", "client", client.id, `Essai gratuit démarré — ${client.clinicName} (30 jours)`);
     return StartPlatformTrialResponse.parse({
@@ -188,8 +191,17 @@ function handler(fn: (req: Request, res: Response) => Promise<void>) {
 router.get("/platform/dashboard", handler(async (_req, res) => {
   const result = await withPlatform(false, (data) => {
     const activeSubs = data.subscriptions.filter((s) => effectiveSubscriptionStatus(s) === "active");
-    // MRR = somme des montants mensuels des abonnements actifs (montant total / durée).
-    const mrr = activeSubs.reduce((sum, s) => sum + Math.round(s.amount / Math.max(1, s.durationMonths)), 0);
+    // MRR = somme des prix mensuels des abonnements actifs EN FACTURATION.
+    // Une clinique en période gratuite (avant billingStartDate) ne contribue
+    // pas au MRR ; un abonnement sans mois payé (durée ≤ mois gratuits)
+    // ne contribue jamais. On utilise le prix mensuel du plan, pas
+    // montant / durée (qui sous-estimerait à cause des mois gratuits).
+    const mrr = activeSubs.reduce((sum, s) => {
+      if (paidMonthsOf(s) === 0) return sum;
+      if (billingStartDateOf(s) > today()) return sum;
+      const plan = data.plans.find((p) => p.id === s.planId);
+      return sum + (plan ? plan.priceMonthly : Math.round(s.amount / Math.max(1, s.durationMonths)));
+    }, 0);
     const confirmed = data.sales.filter((s) => s.status === "confirmée");
     const recentClients = [...data.clients].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 10);
     return GetPlatformDashboardResponse.parse({
@@ -229,6 +241,7 @@ router.post("/platform/clients", handler(async (req, res) => {
       data.subscriptions.unshift({
         id: id(), clientId: client.id, planId: trialPlan.id, startDate: start,
         durationMonths: 1, endDate: addMonths(start, 1), status: "active", amount: 0, commission: 0,
+        freeMonths: 0, billingStartDate: start,
       });
       client.planId = trialPlan.id;
     }
@@ -381,36 +394,51 @@ router.post("/platform/subscriptions", handler(async (req, res) => {
     if (!plan.active) fail("Ce plan n'est plus actif.", 400);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) fail("La date de début est invalide.");
     // Un abonnement payant actif existe déjà : annulez-le avant d'en créer un autre.
+    // (Détection par le plan : un abonnement payant de 2 mois a un montant de 0 FCFA.)
     const existingPaid = data.subscriptions.find(
-      (s) => s.clientId === clientId && effectiveSubscriptionStatus(s) === "active" && s.amount > 0,
+      (s) => s.clientId === clientId && effectiveSubscriptionStatus(s) === "active" && isPaidSubscription(data, s),
     );
     if (existingPaid) fail("Un abonnement payant actif existe déjà pour cette clinique.", 409);
-    // L'essai en cours est remplacé par l'abonnement payant.
+    // L'essai en cours est remplacé par l'abonnement payant (les abonnements
+    // gratuits actifs sont annulés, jamais les abonnements payants).
     for (const s of data.subscriptions) {
-      if (s.clientId === clientId && effectiveSubscriptionStatus(s) === "active" && s.amount === 0) s.status = "cancelled";
+      if (s.clientId === clientId && effectiveSubscriptionStatus(s) === "active" && !isPaidSubscription(data, s)) s.status = "cancelled";
     }
-    const amount = plan.priceMonthly * durationMonths;
+    // Offre : 2 mois gratuits sur chaque nouvel abonnement payant. Les mois
+    // gratuits font partie de la durée : le client paie prix × (durée − 2)
+    // et la facturation commence 2 mois après le début. Durée ≤ 2 mois :
+    // le client ne paie rien sur toute la durée (montant 0, vente à 0).
+    const freeMonths = FREE_MONTHS_ON_SUBSCRIPTION;
+    const billingStartDate = addMonths(startDate, freeMonths);
+    const paidMonths = Math.max(0, durationMonths - freeMonths);
+    const amount = plan.priceMonthly * paidMonths;
     const salesperson = client.commercialId ? data.salespeople.find((s) => s.id === client.commercialId) : undefined;
     const rate = salesperson ? salesperson.commissionRate : 0;
     const commission = Math.round(amount * (rate / 100));
     const subscription = {
       id: id(), clientId, planId, startDate, durationMonths,
       endDate: addMonths(startDate, durationMonths), status: "active" as const,
-      amount, commission,
+      amount, commission, freeMonths, billingStartDate,
     };
     data.subscriptions.unshift(subscription);
     // Vente confirmée automatique (comme dans ComptaOrion) : la commission
-    // est de 0 si aucun commercial n'est assigné à la clinique.
+    // est de 0 si aucun commercial n'est assigné à la clinique. Le montant
+    // et la commission ne sont dus qu'à partir du début de facturation
+    // (commissionDueDate), après les mois gratuits.
+    const freeLabel = paidMonths === 0
+      ? ` (entièrement gratuit — ${freeMonths} mois offerts)`
+      : ` (${freeMonths} mois gratuits, facturation dès le ${billingStartDate})`;
     data.sales.unshift({
       id: id(), clientId, commercialId: client.commercialId,
       source: client.commercialId ? "commercial" as const : client.source === "partner" ? "partner" as const : "web" as const,
       amount, commission, status: "confirmée",
-      createdAt: now(), label: `Abonnement ${plan.name} — ${durationMonths} mois`,
+      createdAt: now(), label: `Abonnement ${plan.name} — ${durationMonths} mois${freeLabel}`,
+      commissionDueDate: billingStartDate,
     });
     client.status = "active";
     client.planId = plan.id;
     client.planAmount = plan.priceMonthly;
-    platformAudit(data, actorId(req), "subscription.create", "subscription", subscription.id, `Abonnement ${plan.name} — ${client.clinicName} (${amount.toLocaleString("fr-FR")} FCFA)`);
+    platformAudit(data, actorId(req), "subscription.create", "subscription", subscription.id, `Abonnement ${plan.name} — ${client.clinicName} (${amount.toLocaleString("fr-FR")} FCFA, ${freeMonths} mois gratuits, facturation dès le ${billingStartDate})`);
     return CreatePlatformSubscriptionResponse.parse(subscription);
   });
   res.status(201).json(result);

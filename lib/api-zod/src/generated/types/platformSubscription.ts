@@ -18,4 +18,7 @@ export interface PlatformSubscription {
   status: PlatformSubscriptionStatus;
   amount: number;
   commission: number;
+  /** @minimum 0 */
+  freeMonths?: number;
+  billingStartDate?: string;
 }

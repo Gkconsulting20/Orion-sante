@@ -17,4 +17,5 @@ export interface PlatformSale {
   status: string;
   createdAt: string;
   label: string;
+  commissionDueDate?: string;
 }

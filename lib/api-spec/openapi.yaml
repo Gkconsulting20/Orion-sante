@@ -892,6 +892,12 @@ components:
         status: { type: string, enum: [active, cancelled, expired] }
         amount: { type: integer }
         commission: { type: integer }
+        # Mois gratuits inclus dans l'abonnement (offre : 2 mois gratuits sur
+        # chaque nouvel abonnement payant ; 0 pour l'essai). Optionnel :
+        # les abonnements créés avant cette offre n'ont pas ces champs.
+        freeMonths: { type: integer, minimum: 0 }
+        # Date de début de facturation = début + mois gratuits.
+        billingStartDate: { type: string }
     PlatformSubscriptionInput:
       type: object
       required: [clientId, planId, startDate, durationMonths]
@@ -913,6 +919,11 @@ components:
         status: { type: string }
         createdAt: { type: string }
         label: { type: string }
+        # Date à partir de laquelle le paiement du client et la commission du
+        # commercial sont dus (= début de facturation de l'abonnement, après
+        # les mois gratuits). Optionnel : les ventes créées avant cette offre
+        # n'ont pas ce champ.
+        commissionDueDate: { type: string }
     PlatformDashboard:
       type: object
       required: [clientsTotal, clientsTrial, clientsActive, mrr, revenueTotal, commissionsTotal, salespeopleCount, recentClients]

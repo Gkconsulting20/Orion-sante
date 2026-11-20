@@ -1452,6 +1452,8 @@ export const DeletePlatformPlanResponse = zod.object({
 
 
 
+export const getPlatformSubscriptionsResponseFreeMonthsMin = 0;
+
 
 
 export const GetPlatformSubscriptionsResponseItem = zod.object({
@@ -1463,7 +1465,9 @@ export const GetPlatformSubscriptionsResponseItem = zod.object({
   "endDate": zod.string(),
   "status": zod.enum(['active', 'cancelled', 'expired']),
   "amount": zod.number().int(),
-  "commission": zod.number().int()
+  "commission": zod.number().int(),
+  "freeMonths": zod.number().int().min(getPlatformSubscriptionsResponseFreeMonthsMin).optional(),
+  "billingStartDate": zod.string().optional()
 })
 export const GetPlatformSubscriptionsResponse = zod.array(GetPlatformSubscriptionsResponseItem)
 
@@ -1482,6 +1486,8 @@ export const CreatePlatformSubscriptionBody = zod.object({
 })
 
 
+export const createPlatformSubscriptionResponseFreeMonthsMin = 0;
+
 
 
 export const CreatePlatformSubscriptionResponse = zod.object({
@@ -1493,7 +1499,9 @@ export const CreatePlatformSubscriptionResponse = zod.object({
   "endDate": zod.string(),
   "status": zod.enum(['active', 'cancelled', 'expired']),
   "amount": zod.number().int(),
-  "commission": zod.number().int()
+  "commission": zod.number().int(),
+  "freeMonths": zod.number().int().min(createPlatformSubscriptionResponseFreeMonthsMin).optional(),
+  "billingStartDate": zod.string().optional()
 })
 
 
@@ -1501,6 +1509,8 @@ export const CancelPlatformSubscriptionParams = zod.object({
   "id": zod.coerce.string()
 })
 
+
+export const cancelPlatformSubscriptionResponseFreeMonthsMin = 0;
 
 
 
@@ -1513,7 +1523,9 @@ export const CancelPlatformSubscriptionResponse = zod.object({
   "endDate": zod.string(),
   "status": zod.enum(['active', 'cancelled', 'expired']),
   "amount": zod.number().int(),
-  "commission": zod.number().int()
+  "commission": zod.number().int(),
+  "freeMonths": zod.number().int().min(cancelPlatformSubscriptionResponseFreeMonthsMin).optional(),
+  "billingStartDate": zod.string().optional()
 })
 
 
@@ -1530,7 +1542,8 @@ export const GetPlatformSalesResponseItem = zod.object({
   "commission": zod.number().int(),
   "status": zod.string(),
   "createdAt": zod.string(),
-  "label": zod.string()
+  "label": zod.string(),
+  "commissionDueDate": zod.string().optional()
 })
 export const GetPlatformSalesResponse = zod.array(GetPlatformSalesResponseItem)
 

@@ -103,8 +103,8 @@ function DashboardTab() {
     <div className="space-y-3">
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <Stat label="Cliniques clientes" value={String(data.clientsTotal)} hint={`${data.clientsTrial} en essai · ${data.clientsActive} actives`} />
-        <Stat label="MRR (revenu mensuel)" value={fcfa(data.mrr)} tone="lagoon" hint="Abonnements actifs" />
-        <Stat label="Chiffre d'affaires total" value={fcfa(data.revenueTotal)} hint="Ventes confirmées" />
+        <Stat label="MRR (revenu mensuel)" value={fcfa(data.mrr)} tone="lagoon" hint="Abonnements actifs en facturation · hors période gratuite" />
+        <Stat label="Chiffre d'affaires total" value={fcfa(data.revenueTotal)} hint="Ventes confirmées · montants dus après les 2 mois gratuits" />
         <Stat label="Commerciaux" value={String(data.salespeopleCount)} hint={`${fcfa(data.commissionsTotal)} de commissions`} />
       </div>
       <section className="panel overflow-hidden rise">
@@ -638,7 +638,7 @@ function SubscriptionsTab() {
     try {
       await create.mutateAsync({ data: { clientId, planId, startDate, durationMonths: Math.max(1, intOnly(duration)) } });
       await refresh();
-      toast({ title: "Abonnement créé", description: "Vente confirmée enregistrée automatiquement, clinique passée en « Actif »." });
+      toast({ title: "Abonnement créé", description: "2 mois gratuits inclus — la facturation commence au 3e mois. Vente confirmée enregistrée, clinique passée en « Actif »." });
     } catch (err) {
       setErr(errMsg(err));
     }
@@ -658,7 +658,7 @@ function SubscriptionsTab() {
     <div>
       <section className="panel p-5 rise mb-3">
         <h3 className="font-semibold mb-1">Nouvel abonnement</h3>
-        <p className="text-sm text-muted-foreground mb-4">La création exige une clinique existante. Une vente confirmée est créée automatiquement (montant = prix × durée, commission selon le commercial assigné, 0 si aucun) et la clinique passe en « Actif ». L'essai en cours est remplacé.</p>
+        <p className="text-sm text-muted-foreground mb-4">La création exige une clinique existante. Chaque nouvel abonnement payant inclut <span className="font-semibold text-foreground">2 mois gratuits</span> : le client ne paie rien pendant les 2 premiers mois et la facturation commence au 3e mois — montant = prix × (durée − 2). Une vente confirmée est créée automatiquement et la clinique passe en « Actif ». L'essai en cours est remplacé.</p>
         <form onSubmit={submit} className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
           <Field label="Clinique">
             <select className="field" value={clientId} onChange={(e) => setClientId(e.target.value)} data-testid="select-sub-client">
@@ -675,8 +675,11 @@ function SubscriptionsTab() {
           <Field label="Date de début"><input type="date" className="field" value={startDate} onChange={(e) => setStartDate(e.target.value)} data-testid="input-sub-start" /></Field>
           <Field label="Durée (mois)"><input className="field num" inputMode="numeric" value={duration} onChange={(e) => setDuration(e.target.value.replace(/[^\d]/g, ""))} data-testid="input-sub-duration" /></Field>
           <div>
-            <div className="text-xs text-muted-foreground mb-1">Montant total</div>
-            <div className="num font-semibold">{selectedPlan ? fcfa(selectedPlan.priceMonthly * Math.max(1, intOnly(duration))) : "—"}</div>
+            <div className="text-xs text-muted-foreground mb-1">Montant total (après 2 mois gratuits)</div>
+            <div className="num font-semibold">{selectedPlan ? fcfa(selectedPlan.priceMonthly * Math.max(0, Math.max(1, intOnly(duration)) - 2)) : "—"}</div>
+            {selectedPlan && Math.max(1, intOnly(duration)) <= 2 && (
+              <div className="text-xs text-muted-foreground mt-1">Durée entièrement couverte par les 2 mois gratuits : aucun paiement sur cet abonnement.</div>
+            )}
             <Button type="submit" className="mt-2" disabled={create.isPending} data-testid="button-create-subscription">
               {create.isPending && <Loader2 className="size-4 mr-2 animate-spin" />} Créer l'abonnement
             </Button>
@@ -697,6 +700,7 @@ function SubscriptionsTab() {
                   <th className="label-s px-4 py-2.5">Plan</th>
                   <th className="label-s px-4 py-2.5 hidden md:table-cell">Début</th>
                   <th className="label-s px-4 py-2.5 hidden md:table-cell">Fin</th>
+                  <th className="label-s px-4 py-2.5 hidden lg:table-cell">Facturation dès le</th>
                   <th className="label-s px-4 py-2.5">Montant</th>
                   <th className="label-s px-4 py-2.5 hidden lg:table-cell">Commission</th>
                   <th className="label-s px-4 py-2.5">Statut</th>
@@ -706,12 +710,14 @@ function SubscriptionsTab() {
               <tbody>
                 {data.map((s) => {
                   const st = effectiveSubStatus(s);
+                  const freeMonths = s.freeMonths ?? 0;
                   return (
                     <tr key={s.id} className="border-b last:border-0" data-testid={`row-subscription-${s.id}`}>
                       <td className="px-4 py-3 font-medium">{clientName(s.clientId)}</td>
-                      <td className="px-4 py-3">{planName(s.planId)} <span className="text-muted-foreground">· {s.durationMonths} mois</span></td>
+                      <td className="px-4 py-3">{planName(s.planId)} <span className="text-muted-foreground">· {s.durationMonths} mois</span>{freeMonths > 0 && <div className="text-xs text-lagoon">dont {freeMonths} mois gratuits</div>}</td>
                       <td className="px-4 py-3 hidden md:table-cell">{fDate(s.startDate)}</td>
                       <td className="px-4 py-3 hidden md:table-cell">{fDate(s.endDate)}</td>
+                      <td className="px-4 py-3 hidden lg:table-cell">{freeMonths > 0 ? fDate(s.billingStartDate ?? s.startDate) : "—"}</td>
                       <td className="px-4 py-3 num">{fcfa(s.amount)}</td>
                       <td className="px-4 py-3 hidden lg:table-cell num">{fcfa(s.commission)}</td>
                       <td className="px-4 py-3">{SUB_STATUS[st] ?? st}</td>
@@ -787,6 +793,7 @@ function SalesTab() {
                   <th className="label-s px-4 py-2.5">Source</th>
                   <th className="label-s px-4 py-2.5">Montant</th>
                   <th className="label-s px-4 py-2.5">Commission</th>
+                  <th className="label-s px-4 py-2.5 hidden lg:table-cell">Commission due le</th>
                   <th className="label-s px-4 py-2.5 hidden lg:table-cell">Libellé</th>
                 </tr>
               </thead>
@@ -799,6 +806,7 @@ function SalesTab() {
                     <td className="px-4 py-3">{SOURCE_LABELS[s.source] ?? s.source}</td>
                     <td className="px-4 py-3 num">{fcfa(s.amount)}</td>
                     <td className="px-4 py-3 num">{fcfa(s.commission)}</td>
+                    <td className="px-4 py-3 hidden lg:table-cell">{s.commissionDueDate ? fDate(s.commissionDueDate) : "—"}</td>
                     <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground">{s.label}</td>
                   </tr>
                 ))}
@@ -822,19 +830,19 @@ function GuideTab() {
       </section>
       <section>
         <h4 className="font-semibold mb-1">2. Essai gratuit en libre-service</h4>
-        <p className="text-muted-foreground">La clinique crée d'abord son compte (« Créer ma clinique » sur la page d'accueil), puis démarre elle-même son essai gratuit de 30 jours depuis son tableau de bord : une carte lui propose l'essai, elle renseigne le nom de la clinique, son contact et son téléphone, et l'essai démarre immédiatement avec un abonnement d'essai. Un seul essai par clinique, non renouvelable par elle-même ; à la fin, l'accès est bloqué jusqu'à la création d'un abonnement payant (voir § 4). Si la clinique est arrivée par un lien de parrainage /sign-up?ref=…, l'essai est attribué au commercial.</p>
+        <p className="text-muted-foreground">La clinique crée d'abord son compte (« Créer ma clinique » sur la page d'accueil), puis démarre elle-même son essai gratuit de 30 jours depuis son tableau de bord : une carte lui propose l'essai, elle renseigne le nom de la clinique, son contact et son téléphone, et l'essai démarre immédiatement avec un abonnement d'essai. Un seul essai par clinique, non renouvelable par elle-même ; à la fin, l'accès est bloqué jusqu'à la création d'un abonnement payant (voir § 4). Si la clinique est arrivée par un lien de parrainage /sign-up?ref=…, l'essai est attribué au commercial. Après l'essai, chaque nouvel abonnement payant inclut 2 mois gratuits (voir § 4).</p>
       </section>
       <section>
         <h4 className="font-semibold mb-1">3. Inscrire une clinique cliente</h4>
         <p className="text-muted-foreground">Onglet « Cliniques clientes » → « Nouvelle clinique ». La clinique est inscrite en essai gratuit de 30 jours, avec un abonnement d'essai créé automatiquement. Pour lier la fiche à son compte Orion Santé (et appliquer l'abonnement et les limites), renseignez son identifiant Clerk (tableau de bord Clerk → Users → ID commençant par user_…). Sans cet identifiant, la fiche reste un suivi commercial sans blocage d'accès.</p>
       </section>
       <section>
-        <h4 className="font-semibold mb-1">4. Créer un abonnement payant</h4>
-        <p className="text-muted-foreground">Onglet « Abonnements » : choisissez la clinique, le plan, la date de début et la durée. Une vente confirmée est créée automatiquement (montant = prix × durée, commission selon le commercial assigné, 0 si aucun) et la clinique passe en « Actif ». L'essai en cours est remplacé. Un abonnement expiré (essai ou payant) bloque l'accès de la clinique avec un message explicite ; l'annulation est possible depuis le tableau.</p>
+        <h4 className="font-semibold mb-1">4. Créer un abonnement payant — 2 mois gratuits</h4>
+        <p className="text-muted-foreground">Onglet « Abonnements » : choisissez la clinique, le plan, la date de début et la durée. Chaque nouvel abonnement payant inclut <strong>2 mois gratuits</strong> : le client ne paie rien pendant les 2 premiers mois et la facturation commence au 3e mois — montant = prix × (durée − 2). Exemple : un abonnement Clinique (19 900 FCFA/mois) de 12 mois coûte 19 900 × 10 = 199 000 FCFA. Si la durée est de 2 mois ou moins, le client ne paie rien sur toute la durée. Une vente confirmée est créée automatiquement (montant et commission calculés après les mois gratuits) et la clinique passe en « Actif ». Le paiement du client et la commission du commercial ne sont dus qu'à partir de la date de début de facturation, affichée dans le tableau des abonnements (« Facturation dès le ») et des ventes (« Commission due le »). L'essai en cours est remplacé. Un abonnement expiré (essai ou payant) bloque l'accès de la clinique avec un message explicite ; l'annulation est possible depuis le tableau.</p>
       </section>
       <section>
         <h4 className="font-semibold mb-1">5. Parrainage et commissions</h4>
-        <p className="text-muted-foreground">Chaque commercial a un lien de parrainage /sign-up?ref=… (onglet « Commerciaux », bouton « Copier le lien »). Quand une clinique s'inscrit par ce lien puis démarre son essai gratuit depuis son tableau de bord, l'essai lui est attribué. La commission par défaut est de 10 % des ventes issues de ses cliniques ; le taux se règle par commercial. Les ventes sont ventilées par canal dans l'onglet « Ventes » (Commerciaux / Web / Partenaires).</p>
+        <p className="text-muted-foreground">Chaque commercial a un lien de parrainage /sign-up?ref=… (onglet « Commerciaux », bouton « Copier le lien »). Quand une clinique s'inscrit par ce lien puis démarre son essai gratuit depuis son tableau de bord, l'essai lui est attribué. La commission par défaut est de 10 % des ventes issues de ses cliniques ; le taux se règle par commercial. La commission est due quand le client paie, donc à partir du début de facturation — après les 2 mois gratuits de l'abonnement. Les ventes sont ventilées par canal dans l'onglet « Ventes » (Commerciaux / Web / Partenaires). Le revenu mensuel (MRR) du tableau de bord ne compte que les abonnements en facturation : une clinique en période gratuite ne contribue pas au MRR, mais reste comptée comme cliente active.</p>
       </section>
       <section>
         <h4 className="font-semibold mb-1">6. Ce qui n'est pas encore en place</h4>

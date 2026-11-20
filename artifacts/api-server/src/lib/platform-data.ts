@@ -12,6 +12,16 @@ import { day, id, now, today } from "./clinic-data";
 export const PLATFORM_OWNER = "platform:orionexa";
 
 /**
+ * Offre commerciale (décision ORIONEXA, 20 nov. 2026) : chaque NOUVEL
+ * abonnement payant inclut 2 mois gratuits. L'essai gratuit reste à
+ * 30 jours et n'est pas concerné. Les 2 mois gratuits font partie de la
+ * durée de l'abonnement : le client paie prix × (durée − 2), la facturation
+ * commence au 3e mois. La commission du commercial n'est due que quand le
+ * client paie, donc à partir de la date de début de facturation.
+ */
+export const FREE_MONTHS_ON_SUBSCRIPTION = 2;
+
+/**
  * Agrégat commercial de la plateforme ORIONEXA. Il vit dans la même table
  * `clinics` que les cliniques (aucune migration possible) : une seule ligne,
  * propriétaire `platform:orionexa`. Aucune donnée de patient ici.
@@ -60,6 +70,32 @@ export function effectiveSubscriptionStatus(sub: PlatformSubscription): "active"
   return sub.endDate < today() ? "expired" : "active";
 }
 
+/**
+ * Un abonnement est « payant » si son plan a un prix mensuel > 0 (l'essai
+ * est à 0 FCFA). Ne PAS se baser sur le montant : un abonnement payant de
+ * 2 mois seulement a un montant de 0 FCFA (2 mois gratuits) mais reste un
+ * abonnement payant — sinon il serait confondu avec un essai.
+ */
+export function isPaidSubscription(data: PlatformData, sub: PlatformSubscription): boolean {
+  const plan = data.plans.find((p) => p.id === sub.planId);
+  return (plan?.priceMonthly ?? 0) > 0;
+}
+
+/** Mois gratuits d'un abonnement (0 pour l'essai et les anciennes lignes sans le champ). */
+export function freeMonthsOf(sub: PlatformSubscription): number {
+  return sub.freeMonths ?? 0;
+}
+
+/** Date de début de facturation = début + mois gratuits (début pour les anciennes lignes). */
+export function billingStartDateOf(sub: PlatformSubscription): string {
+  return sub.billingStartDate ?? sub.startDate;
+}
+
+/** Nombre de mois effectivement payés par le client sur cet abonnement. */
+export function paidMonthsOf(sub: PlatformSubscription): number {
+  return Math.max(0, sub.durationMonths - freeMonthsOf(sub));
+}
+
 /** Plan actif de la clinique (via son abonnement actif), ou null si aucun. */
 export function clinicPlan(platform: PlatformData | null, owner: string): PlatformPlan | null {
   if (!platform) return null;
@@ -95,11 +131,11 @@ export function initialPlatformData(): PlatformData {
     { id: "cl-2", clinicName: "Clinique Espoir (fictif)", contactName: "Kossi Lawson", email: "contact@espoir.example.tg", phone: "+228 90 77 88 99", status: "active", source: "commercial", commercialId: "sp-1", ownerId: "", planId: "plan-clinique", planAmount: 19900, createdAt, lastLoginAt: "" },
   ];
   const subscriptions: PlatformSubscription[] = [
-    { id: "sub-1", clientId: "cl-1", planId: "plan-trial", startDate: start, durationMonths: 1, endDate: addMonths(start, 1), status: "active", amount: 0, commission: 0 },
-    { id: "sub-2", clientId: "cl-2", planId: "plan-clinique", startDate: start, durationMonths: 12, endDate: addMonths(start, 12), status: "active", amount: 19900 * 12, commission: 19900 * 12 * 0.1 },
+    { id: "sub-1", clientId: "cl-1", planId: "plan-trial", startDate: start, durationMonths: 1, endDate: addMonths(start, 1), status: "active", amount: 0, commission: 0, freeMonths: 0, billingStartDate: start },
+    { id: "sub-2", clientId: "cl-2", planId: "plan-clinique", startDate: start, durationMonths: 12, endDate: addMonths(start, 12), status: "active", amount: 19900 * 10, commission: 19900 * 10 * 0.1, freeMonths: FREE_MONTHS_ON_SUBSCRIPTION, billingStartDate: addMonths(start, FREE_MONTHS_ON_SUBSCRIPTION) },
   ];
   const sales: PlatformSale[] = [
-    { id: "sale-1", clientId: "cl-2", commercialId: "sp-1", source: "commercial", amount: 19900 * 12, commission: 19900 * 12 * 0.1, status: "confirmée", createdAt, label: "Abonnement Clinique — 12 mois" },
+    { id: "sale-1", clientId: "cl-2", commercialId: "sp-1", source: "commercial", amount: 19900 * 10, commission: 19900 * 10 * 0.1, status: "confirmée", createdAt, label: "Abonnement Clinique — 12 mois (2 mois gratuits)", commissionDueDate: addMonths(start, FREE_MONTHS_ON_SUBSCRIPTION) },
   ];
   return {
     plans,

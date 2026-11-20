@@ -638,6 +638,9 @@ export interface PlatformSubscription {
   status: PlatformSubscriptionStatus;
   amount: number;
   commission: number;
+  /** @minimum 0 */
+  freeMonths?: number;
+  billingStartDate?: string;
 }
 
 export interface PlatformSubscriptionInput {
@@ -672,6 +675,7 @@ export interface PlatformSale {
   status: string;
   createdAt: string;
   label: string;
+  commissionDueDate?: string;
 }
 
 export interface PlatformDashboard {
