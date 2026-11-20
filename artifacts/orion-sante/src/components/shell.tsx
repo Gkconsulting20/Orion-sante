@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { Show, useClerk, useUser } from "@clerk/react";
-import { LayoutDashboard, Users, Stethoscope, CalendarDays, Receipt, Wallet, BarChart3, Settings, LogIn, LogOut, FlaskConical } from "lucide-react";
-import { useWorkspace } from "@/hooks/use-clinic";
+import { LayoutDashboard, Users, Stethoscope, CalendarDays, Receipt, Wallet, BarChart3, Settings, LogIn, LogOut, FlaskConical, Briefcase } from "lucide-react";
+import { useWorkspace, usePlatformMe } from "@/hooks/use-clinic";
 import { cn } from "@/lib/utils";
 import { fDateLong } from "@/lib/fmt";
 
@@ -46,6 +46,10 @@ function UserBlock() {
 export function Shell({ children }: { children: ReactNode }) {
   const [loc] = useLocation();
   const { data: ws } = useWorkspace();
+  const { data: platformMe } = usePlatformMe({
+    query: { staleTime: 5 * 60_000, retry: 1 },
+  });
+  const isPlatformAdmin = platformMe?.isPlatformAdmin ?? false;
   const active = (href: string) => (href === "/" ? loc === "/" : loc.startsWith(href));
   const open = ws?.cashSession.isOpen;
 
@@ -76,6 +80,17 @@ export function Shell({ children }: { children: ReactNode }) {
               <Icon className="size-[17px]" /> {label}
             </Link>
           ))}
+          {isPlatformAdmin && (
+            <>
+              <div className="pt-4 pb-1 px-3 text-[10px] uppercase tracking-wider text-sidebar-foreground/50">ORIONEXA</div>
+              <Link href="/commercialisation" data-testid="link-nav-commercialisation"
+                className={cn("relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                  active("/commercialisation") ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50")}>
+                {active("/commercialisation") && <span className="absolute -left-3 top-2 bottom-2 w-[3px] rounded-r bg-sidebar-primary" />}
+                <Briefcase className="size-[17px]" /> Commercialisation
+              </Link>
+            </>
+          )}
         </nav>
         <div className="p-4 border-t border-sidebar-border">
           <Show when="signed-in"><UserBlock /></Show>
@@ -101,6 +116,9 @@ export function Shell({ children }: { children: ReactNode }) {
             {NAV.map(({ href, label }) => (
               <Link key={href} href={href} className={cn("whitespace-nowrap text-xs px-3 py-1.5 rounded-full", active(href) ? "bg-sidebar-primary text-sidebar-primary-foreground" : "bg-sidebar-accent/60")}>{label}</Link>
             ))}
+            {isPlatformAdmin && (
+              <Link href="/commercialisation" className={cn("whitespace-nowrap text-xs px-3 py-1.5 rounded-full", active("/commercialisation") ? "bg-sidebar-primary text-sidebar-primary-foreground" : "bg-sidebar-accent/60")}>Commercialisation</Link>
+            )}
           </nav>
         </header>
 

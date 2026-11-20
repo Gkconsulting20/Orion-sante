@@ -65,6 +65,9 @@ export const age = (birth: string) => {
 };
 
 export const fullName = (p?: Patient | null) => (p ? `${p.lastName.toUpperCase()} ${p.firstName}` : "Patient inconnu");
+/** Nom affiché d'un patient dont le dossier a été supprimé (factures et paiements conservés, anonymisés). */
+export const patientDisplayName = (p: Patient | null | undefined, anonymized?: boolean) =>
+  anonymized ? "Patient supprimé" : fullName(p);
 export const initials = (p?: Patient | null) => (p ? `${p.firstName[0] ?? ""}${p.lastName[0] ?? ""}`.toUpperCase() : "?");
 
 export const METHOD: Record<string, string> = { cash: "Espèces", tmoney: "T-Money", flooz: "Flooz", bank: "Banque / virement" };

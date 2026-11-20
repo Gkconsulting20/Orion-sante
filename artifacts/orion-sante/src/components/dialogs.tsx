@@ -63,7 +63,7 @@ function Submit({ pending, label, disabled }: { pending: boolean; label: string;
 }
 
 /* ---------------- Patient ---------------- */
-const emptyPatient: PatientInput = { firstName: "", lastName: "", sex: "F", birthDate: "", phone: "", address: "", emergencyContact: "", allergies: "" };
+const emptyPatient: PatientInput = { firstName: "", lastName: "", sex: "F", birthDate: "", phone: "", address: "", emergencyContact: "", allergies: "", consentGiven: false, consentDate: "", consentMethod: "oral" };
 
 export function PatientDialog({ open, onOpenChange, patient, onSaved }: Base & { patient?: Patient | null; onSaved?: (p: Patient) => void }) {
   const [f, setF] = useState<PatientInput>(emptyPatient);
@@ -75,7 +75,7 @@ export function PatientDialog({ open, onOpenChange, patient, onSaved }: Base & {
   useEffect(() => {
     if (open) {
       setError("");
-      setF(patient ? { firstName: patient.firstName, lastName: patient.lastName, sex: patient.sex, birthDate: patient.birthDate.slice(0, 10), phone: patient.phone, address: patient.address, emergencyContact: patient.emergencyContact, allergies: patient.allergies } : emptyPatient);
+      setF(patient ? { firstName: patient.firstName, lastName: patient.lastName, sex: patient.sex, birthDate: patient.birthDate.slice(0, 10), phone: patient.phone, address: patient.address, emergencyContact: patient.emergencyContact, allergies: patient.allergies, consentGiven: patient.consentGiven ?? false, consentDate: patient.consentDate?.slice(0, 10) ?? "", consentMethod: patient.consentMethod ?? "oral" } : emptyPatient);
     }
   }, [open, patient]);
   const set = (k: keyof PatientInput, v: string) => setF((s) => ({ ...s, [k]: v }));
@@ -122,6 +122,26 @@ export function PatientDialog({ open, onOpenChange, patient, onSaved }: Base & {
           <Field label="Allergies connues" hint="Laisser vide si aucune allergie connue.">
             <textarea className="field" value={f.allergies} maxLength={2000} onChange={(e) => set("allergies", e.target.value)} data-testid="input-allergies" />
           </Field>
+          <div className="rounded-lg border p-3 space-y-3">
+            <label className="flex items-start gap-2 text-sm cursor-pointer">
+              <input type="checkbox" className="mt-0.5 size-4 accent-[hsl(226_49%_24%)]" checked={!!f.consentGiven}
+                onChange={(e) => setF((s) => ({ ...s, consentGiven: e.target.checked, consentDate: e.target.checked ? (s.consentDate || new Date().toISOString().slice(0, 10)) : "" }))}
+                data-testid="input-consent" />
+              <span><span className="font-medium">Consentement au traitement des données</span><br />
+              <span className="text-muted-foreground text-xs">Le patient accepte que ses données soient enregistrées et utilisées pour son suivi dans cette clinique. À cocher explicitement.</span></span>
+            </label>
+            {f.consentGiven && (
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Mode de consentement">
+                  <select className="field" value={f.consentMethod ?? "oral"} onChange={(e) => set("consentMethod", e.target.value)} data-testid="select-consent-method">
+                    <option value="oral">Oral</option>
+                    <option value="écrit">Écrit</option>
+                  </select>
+                </Field>
+                <Field label="Date du consentement"><input type="date" className="field" value={f.consentDate ?? ""} onChange={(e) => set("consentDate", e.target.value)} data-testid="input-consent-date" /></Field>
+              </div>
+            )}
+          </div>
           <Err msg={error} />
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Annuler</Button>

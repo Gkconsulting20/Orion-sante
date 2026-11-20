@@ -15,4 +15,5 @@ export type Invoice = InvoiceInput & {
   paid: number;
   status: InvoiceStatus;
   createdAt: string;
+  anonymized?: boolean;
 };

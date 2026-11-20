@@ -2,9 +2,19 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetWorkspace,
   useGetDashboard,
+  useGetPlatformMe,
   getGetWorkspaceQueryKey,
   getGetDashboardQueryKey,
+  getGetPlatformMeQueryKey,
+  getGetPlatformDashboardQueryKey,
+  getGetPlatformClientsQueryKey,
+  getGetPlatformSalespeopleQueryKey,
+  getGetPlatformPlansQueryKey,
+  getGetPlatformSubscriptionsQueryKey,
+  getGetPlatformSalesQueryKey,
 } from "@workspace/api-client-react";
+
+export { useGetPlatformMe as usePlatformMe };
 
 const MAX_POLLS = 20;
 
@@ -36,5 +46,20 @@ export function useRefresh() {
     Promise.all([
       qc.invalidateQueries({ queryKey: getGetWorkspaceQueryKey() }),
       qc.invalidateQueries({ queryKey: getGetDashboardQueryKey() }),
+    ]);
+}
+
+/** Invalide toutes les requêtes de l'espace Commercialisation. */
+export function useRefreshPlatform() {
+  const qc = useQueryClient();
+  return () =>
+    Promise.all([
+      qc.invalidateQueries({ queryKey: getGetPlatformMeQueryKey() }),
+      qc.invalidateQueries({ queryKey: getGetPlatformDashboardQueryKey() }),
+      qc.invalidateQueries({ queryKey: getGetPlatformClientsQueryKey() }),
+      qc.invalidateQueries({ queryKey: getGetPlatformSalespeopleQueryKey() }),
+      qc.invalidateQueries({ queryKey: getGetPlatformPlansQueryKey() }),
+      qc.invalidateQueries({ queryKey: getGetPlatformSubscriptionsQueryKey() }),
+      qc.invalidateQueries({ queryKey: getGetPlatformSalesQueryKey() }),
     ]);
 }

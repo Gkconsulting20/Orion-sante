@@ -5,6 +5,7 @@
  * Orion Santé
  * OpenAPI spec version: 0.1.0
  */
+import type { PatientInputConsentMethod } from './patientInputConsentMethod';
 import type { PatientInputSex } from './patientInputSex';
 
 export interface PatientInput {
@@ -28,4 +29,7 @@ export interface PatientInput {
   emergencyContact: string;
   /** @maxLength 2000 */
   allergies: string;
+  consentGiven?: boolean;
+  consentDate?: string;
+  consentMethod?: PatientInputConsentMethod;
 }

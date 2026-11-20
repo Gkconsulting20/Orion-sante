@@ -17,6 +17,14 @@ export const PatientInputSex = {
   M: 'M',
 } as const;
 
+export type PatientInputConsentMethod = typeof PatientInputConsentMethod[keyof typeof PatientInputConsentMethod];
+
+
+export const PatientInputConsentMethod = {
+  oral: 'oral',
+  écrit: 'écrit',
+} as const;
+
 export interface PatientInput {
   /**
      * @minLength 1
@@ -38,6 +46,9 @@ export interface PatientInput {
   emergencyContact: string;
   /** @maxLength 2000 */
   allergies: string;
+  consentGiven?: boolean;
+  consentDate?: string;
+  consentMethod?: PatientInputConsentMethod;
 }
 
 export type Patient = PatientInput & {
@@ -138,6 +149,7 @@ export type Invoice = InvoiceInput & {
   paid: number;
   status: InvoiceStatus;
   createdAt: string;
+  anonymized?: boolean;
 };
 
 export type PaymentInputMethod = typeof PaymentInputMethod[keyof typeof PaymentInputMethod];
@@ -172,6 +184,7 @@ export type Payment = PaymentInput & {
   receiptNumber: string;
   patientId: string;
   createdAt: string;
+  anonymized?: boolean;
 };
 
 export type ExpenseInputCategory = typeof ExpenseInputCategory[keyof typeof ExpenseInputCategory];
@@ -275,6 +288,55 @@ export interface Activity {
   kind: string;
 }
 
+export type ClinicRole = typeof ClinicRole[keyof typeof ClinicRole];
+
+
+export const ClinicRole = {
+  owner: 'owner',
+  doctor: 'doctor',
+  secretary: 'secretary',
+  accountant: 'accountant',
+} as const;
+
+export interface Member {
+  userId: string;
+  /** @maxLength 150 */
+  name: string;
+  /** @maxLength 150 */
+  email: string;
+  role: ClinicRole;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  createdAt: string;
+  actorId: string;
+  actorLabel: string;
+  action: string;
+  entity: string;
+  recordId: string;
+  detail: string;
+}
+
+export interface PlatformPlan {
+  id: string;
+  /** @maxLength 100 */
+  name: string;
+  /** @minimum 0 */
+  priceMonthly: number;
+  /** @minimum 1 */
+  periodMonths: number;
+  /** @minimum 1 */
+  maxUsers: number;
+  /** @minimum 1 */
+  maxPatients: number;
+  /** @minimum 0 */
+  maxStorageGb: number;
+  /** @maxLength 2000 */
+  features: string;
+  active: boolean;
+}
+
 export interface Workspace {
   isDemo: boolean;
   role: string;
@@ -286,6 +348,9 @@ export interface Workspace {
   settings: Settings;
   cashSession: CashSession;
   activity: Activity[];
+  members: Member[];
+  auditLog: AuditLogEntry[];
+  plan?: PlatformPlan;
 }
 
 export interface RevenuePoint {
@@ -312,4 +377,282 @@ export interface Dashboard {
   revenue: RevenuePoint[];
   services: ServiceTotal[];
 }
+
+export interface OkResponse {
+  ok: boolean;
+}
+
+export interface MemberInput {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  userId: string;
+  /** @maxLength 150 */
+  name: string;
+  /** @maxLength 150 */
+  email: string;
+  role: ClinicRole;
+}
+
+export interface MemberRoleInput {
+  role: ClinicRole;
+}
+
+export interface PatientExport {
+  patient: Patient;
+  visits: Visit[];
+  invoices: Invoice[];
+  payments: Payment[];
+}
+
+export interface PlatformMe {
+  isPlatformAdmin: boolean;
+}
+
+export interface PlatformPlanInput {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  name: string;
+  /** @minimum 0 */
+  priceMonthly: number;
+  /** @minimum 1 */
+  periodMonths: number;
+  /** @minimum 1 */
+  maxUsers: number;
+  /** @minimum 1 */
+  maxPatients: number;
+  /** @minimum 0 */
+  maxStorageGb: number;
+  /** @maxLength 2000 */
+  features: string;
+  active: boolean;
+}
+
+export type PlatformClientStatus = typeof PlatformClientStatus[keyof typeof PlatformClientStatus];
+
+
+export const PlatformClientStatus = {
+  trial: 'trial',
+  active: 'active',
+  suspended: 'suspended',
+  inactive: 'inactive',
+} as const;
+
+export type PlatformClientSource = typeof PlatformClientSource[keyof typeof PlatformClientSource];
+
+
+export const PlatformClientSource = {
+  web: 'web',
+  commercial: 'commercial',
+  partner: 'partner',
+} as const;
+
+export interface PlatformClient {
+  id: string;
+  /** @maxLength 150 */
+  clinicName: string;
+  /** @maxLength 150 */
+  contactName: string;
+  /** @maxLength 150 */
+  email: string;
+  /** @maxLength 30 */
+  phone: string;
+  status: PlatformClientStatus;
+  source: PlatformClientSource;
+  commercialId: string;
+  ownerId: string;
+  planId: string;
+  planAmount: number;
+  createdAt: string;
+  lastLoginAt: string;
+}
+
+export type PlatformClientInputSource = typeof PlatformClientInputSource[keyof typeof PlatformClientInputSource];
+
+
+export const PlatformClientInputSource = {
+  web: 'web',
+  commercial: 'commercial',
+  partner: 'partner',
+} as const;
+
+export interface PlatformClientInput {
+  /**
+     * @minLength 1
+     * @maxLength 150
+     */
+  clinicName: string;
+  /** @maxLength 150 */
+  contactName: string;
+  /** @maxLength 150 */
+  email: string;
+  /** @maxLength 30 */
+  phone: string;
+  source: PlatformClientInputSource;
+  commercialId: string;
+  ownerId: string;
+}
+
+export type PlatformClientUpdateStatus = typeof PlatformClientUpdateStatus[keyof typeof PlatformClientUpdateStatus];
+
+
+export const PlatformClientUpdateStatus = {
+  trial: 'trial',
+  active: 'active',
+  suspended: 'suspended',
+  inactive: 'inactive',
+} as const;
+
+export type PlatformClientUpdateSource = typeof PlatformClientUpdateSource[keyof typeof PlatformClientUpdateSource];
+
+
+export const PlatformClientUpdateSource = {
+  web: 'web',
+  commercial: 'commercial',
+  partner: 'partner',
+} as const;
+
+export interface PlatformClientUpdate {
+  /**
+     * @minLength 1
+     * @maxLength 150
+     */
+  clinicName: string;
+  /** @maxLength 150 */
+  contactName: string;
+  /** @maxLength 150 */
+  email: string;
+  /** @maxLength 30 */
+  phone: string;
+  status: PlatformClientUpdateStatus;
+  source: PlatformClientUpdateSource;
+  commercialId: string;
+  ownerId: string;
+}
+
+export interface PlatformSalesperson {
+  id: string;
+  /** @maxLength 100 */
+  firstName: string;
+  /** @maxLength 100 */
+  lastName: string;
+  /** @maxLength 150 */
+  email: string;
+  /** @maxLength 30 */
+  phone: string;
+  /** @maxLength 100 */
+  region: string;
+  commissionRate: number;
+  /** @minimum 0 */
+  monthlyGoal: number;
+  active: boolean;
+}
+
+export interface PlatformSalespersonInput {
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  firstName: string;
+  /**
+     * @minLength 1
+     * @maxLength 100
+     */
+  lastName: string;
+  /** @maxLength 150 */
+  email: string;
+  /** @maxLength 30 */
+  phone: string;
+  /** @maxLength 100 */
+  region: string;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  commissionRate: number;
+  /** @minimum 0 */
+  monthlyGoal: number;
+  active: boolean;
+}
+
+export type PlatformSubscriptionStatus = typeof PlatformSubscriptionStatus[keyof typeof PlatformSubscriptionStatus];
+
+
+export const PlatformSubscriptionStatus = {
+  active: 'active',
+  cancelled: 'cancelled',
+  expired: 'expired',
+} as const;
+
+export interface PlatformSubscription {
+  id: string;
+  clientId: string;
+  planId: string;
+  startDate: string;
+  /** @minimum 1 */
+  durationMonths: number;
+  endDate: string;
+  status: PlatformSubscriptionStatus;
+  amount: number;
+  commission: number;
+}
+
+export interface PlatformSubscriptionInput {
+  /** @minLength 1 */
+  clientId: string;
+  /** @minLength 1 */
+  planId: string;
+  startDate: string;
+  /**
+     * @minimum 1
+     * @maximum 36
+     */
+  durationMonths: number;
+}
+
+export type PlatformSaleSource = typeof PlatformSaleSource[keyof typeof PlatformSaleSource];
+
+
+export const PlatformSaleSource = {
+  web: 'web',
+  commercial: 'commercial',
+  partner: 'partner',
+} as const;
+
+export interface PlatformSale {
+  id: string;
+  clientId: string;
+  commercialId: string;
+  source: PlatformSaleSource;
+  amount: number;
+  commission: number;
+  status: string;
+  createdAt: string;
+  label: string;
+}
+
+export interface PlatformDashboard {
+  clientsTotal: number;
+  clientsTrial: number;
+  clientsActive: number;
+  mrr: number;
+  revenueTotal: number;
+  commissionsTotal: number;
+  salespeopleCount: number;
+  recentClients: PlatformClient[];
+}
+
+export type GetAuditLogParams = {
+action?: string;
+entity?: string;
+from?: string;
+to?: string;
+};
+
+export type GetPlatformSalesParams = {
+source?: string;
+};
 

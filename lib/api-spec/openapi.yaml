@@ -63,6 +63,16 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Patient" }
+    delete:
+      operationId: deletePatient
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
   /visits:
     post:
       operationId: createVisit
@@ -163,6 +173,289 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/CashSession" }
+  /audit-log:
+    get:
+      operationId: getAuditLog
+      parameters:
+        - { name: action, in: query, schema: { type: string } }
+        - { name: entity, in: query, schema: { type: string } }
+        - { name: from, in: query, schema: { type: string } }
+        - { name: to, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: Journal d'audit de la clinique
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AuditLogEntry" }
+  /members:
+    post:
+      operationId: createMember
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MemberInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Member" }
+  /members/{userId}:
+    put:
+      operationId: updateMember
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MemberRoleInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Member" }
+    delete:
+      operationId: deleteMember
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+  /patients/{id}/export:
+    get:
+      operationId: exportPatient
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Patient export
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PatientExport" }
+  /platform/me:
+    get:
+      operationId: getPlatformMe
+      responses:
+        "200":
+          description: Platform admin status
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlatformMe" }
+  /platform/dashboard:
+    get:
+      operationId: getPlatformDashboard
+      responses:
+        "200":
+          description: Platform dashboard
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlatformDashboard" }
+  /platform/clients:
+    get:
+      operationId: getPlatformClients
+      responses:
+        "200":
+          description: Clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PlatformClient" }
+    post:
+      operationId: createPlatformClient
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PlatformClientInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlatformClient" }
+  /platform/clients/{id}:
+    put:
+      operationId: updatePlatformClient
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PlatformClientUpdate" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlatformClient" }
+    delete:
+      operationId: deletePlatformClient
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+  /platform/salespeople:
+    get:
+      operationId: getPlatformSalespeople
+      responses:
+        "200":
+          description: Salespeople
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PlatformSalesperson" }
+    post:
+      operationId: createPlatformSalesperson
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PlatformSalespersonInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlatformSalesperson" }
+  /platform/salespeople/{id}:
+    put:
+      operationId: updatePlatformSalesperson
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PlatformSalespersonInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlatformSalesperson" }
+    delete:
+      operationId: deletePlatformSalesperson
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+  /platform/plans:
+    get:
+      operationId: getPlatformPlans
+      responses:
+        "200":
+          description: Plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PlatformPlan" }
+    post:
+      operationId: createPlatformPlan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PlatformPlanInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlatformPlan" }
+  /platform/plans/{id}:
+    put:
+      operationId: updatePlatformPlan
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PlatformPlanInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlatformPlan" }
+    delete:
+      operationId: deletePlatformPlan
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OkResponse" }
+  /platform/subscriptions:
+    get:
+      operationId: getPlatformSubscriptions
+      responses:
+        "200":
+          description: Subscriptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PlatformSubscription" }
+    post:
+      operationId: createPlatformSubscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PlatformSubscriptionInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlatformSubscription" }
+  /platform/subscriptions/{id}/cancel:
+    post:
+      operationId: cancelPlatformSubscription
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Cancelled
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PlatformSubscription" }
+  /platform/sales:
+    get:
+      operationId: getPlatformSales
+      parameters:
+        - { name: source, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: Sales
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PlatformSale" }
 components:
   schemas:
     HealthStatus:
@@ -182,6 +475,9 @@ components:
         address: { type: string, maxLength: 300 }
         emergencyContact: { type: string, maxLength: 300 }
         allergies: { type: string, maxLength: 2000 }
+        consentGiven: { type: boolean }
+        consentDate: { type: string }
+        consentMethod: { type: string, enum: [oral, "écrit"] }
     Patient:
       allOf:
         - { $ref: "#/components/schemas/PatientInput" }
@@ -245,6 +541,7 @@ components:
             paid: { type: integer }
             status: { type: string, enum: [unpaid, partial, paid] }
             createdAt: { type: string }
+            anonymized: { type: boolean }
     PaymentInput:
       type: object
       required: [invoiceId, amount, method, reference, requestId]
@@ -264,6 +561,7 @@ components:
             receiptNumber: { type: string }
             patientId: { type: string }
             createdAt: { type: string }
+            anonymized: { type: boolean }
     ExpenseInput:
       type: object
       required: [label, supplier, category, amount, method]
@@ -328,7 +626,7 @@ components:
         kind: { type: string }
     Workspace:
       type: object
-      required: [isDemo, role, patients, visits, invoices, payments, expenses, settings, cashSession, activity]
+      required: [isDemo, role, patients, visits, invoices, payments, expenses, settings, cashSession, activity, members, auditLog]
       properties:
         isDemo: { type: boolean }
         role: { type: string }
@@ -352,6 +650,13 @@ components:
         activity:
           type: array
           items: { $ref: "#/components/schemas/Activity" }
+        members:
+          type: array
+          items: { $ref: "#/components/schemas/Member" }
+        auditLog:
+          type: array
+          items: { $ref: "#/components/schemas/AuditLogEntry" }
+        plan: { $ref: "#/components/schemas/PlatformPlan" }
     RevenuePoint:
       type: object
       required: [date, receipts, expenses]
@@ -384,3 +689,201 @@ components:
         services:
           type: array
           items: { $ref: "#/components/schemas/ServiceTotal" }
+    OkResponse:
+      type: object
+      required: [ok]
+      properties:
+        ok: { type: boolean }
+    ClinicRole:
+      type: string
+      enum: [owner, doctor, secretary, accountant]
+    Member:
+      type: object
+      required: [userId, name, email, role]
+      properties:
+        userId: { type: string }
+        name: { type: string, maxLength: 150 }
+        email: { type: string, maxLength: 150 }
+        role: { $ref: "#/components/schemas/ClinicRole" }
+    MemberInput:
+      type: object
+      required: [userId, name, email, role]
+      properties:
+        userId: { type: string, minLength: 1, maxLength: 200 }
+        name: { type: string, maxLength: 150 }
+        email: { type: string, maxLength: 150 }
+        role: { $ref: "#/components/schemas/ClinicRole" }
+    MemberRoleInput:
+      type: object
+      required: [role]
+      properties:
+        role: { $ref: "#/components/schemas/ClinicRole" }
+    AuditLogEntry:
+      type: object
+      required: [id, createdAt, actorId, actorLabel, action, entity, recordId, detail]
+      properties:
+        id: { type: string }
+        createdAt: { type: string }
+        actorId: { type: string }
+        actorLabel: { type: string }
+        action: { type: string }
+        entity: { type: string }
+        recordId: { type: string }
+        detail: { type: string }
+    PatientExport:
+      type: object
+      required: [patient, visits, invoices, payments]
+      properties:
+        patient: { $ref: "#/components/schemas/Patient" }
+        visits:
+          type: array
+          items: { $ref: "#/components/schemas/Visit" }
+        invoices:
+          type: array
+          items: { $ref: "#/components/schemas/Invoice" }
+        payments:
+          type: array
+          items: { $ref: "#/components/schemas/Payment" }
+    PlatformMe:
+      type: object
+      required: [isPlatformAdmin]
+      properties:
+        isPlatformAdmin: { type: boolean }
+    PlatformPlan:
+      type: object
+      required: [id, name, priceMonthly, periodMonths, maxUsers, maxPatients, maxStorageGb, features, active]
+      properties:
+        id: { type: string }
+        name: { type: string, maxLength: 100 }
+        priceMonthly: { type: integer, minimum: 0 }
+        periodMonths: { type: integer, minimum: 1 }
+        maxUsers: { type: integer, minimum: 1 }
+        maxPatients: { type: integer, minimum: 1 }
+        maxStorageGb: { type: integer, minimum: 0 }
+        features: { type: string, maxLength: 2000 }
+        active: { type: boolean }
+    PlatformPlanInput:
+      type: object
+      required: [name, priceMonthly, periodMonths, maxUsers, maxPatients, maxStorageGb, features, active]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        priceMonthly: { type: integer, minimum: 0 }
+        periodMonths: { type: integer, minimum: 1 }
+        maxUsers: { type: integer, minimum: 1 }
+        maxPatients: { type: integer, minimum: 1 }
+        maxStorageGb: { type: integer, minimum: 0 }
+        features: { type: string, maxLength: 2000 }
+        active: { type: boolean }
+    PlatformClient:
+      type: object
+      required: [id, clinicName, contactName, email, phone, status, source, commercialId, ownerId, planId, planAmount, createdAt, lastLoginAt]
+      properties:
+        id: { type: string }
+        clinicName: { type: string, maxLength: 150 }
+        contactName: { type: string, maxLength: 150 }
+        email: { type: string, maxLength: 150 }
+        phone: { type: string, maxLength: 30 }
+        status: { type: string, enum: [trial, active, suspended, inactive] }
+        source: { type: string, enum: [web, commercial, partner] }
+        commercialId: { type: string }
+        ownerId: { type: string }
+        planId: { type: string }
+        planAmount: { type: integer }
+        createdAt: { type: string }
+        lastLoginAt: { type: string }
+    PlatformClientInput:
+      type: object
+      required: [clinicName, contactName, email, phone, source, commercialId, ownerId]
+      properties:
+        clinicName: { type: string, minLength: 1, maxLength: 150 }
+        contactName: { type: string, maxLength: 150 }
+        email: { type: string, maxLength: 150 }
+        phone: { type: string, maxLength: 30 }
+        source: { type: string, enum: [web, commercial, partner] }
+        commercialId: { type: string }
+        ownerId: { type: string }
+    PlatformClientUpdate:
+      type: object
+      required: [clinicName, contactName, email, phone, status, source, commercialId, ownerId]
+      properties:
+        clinicName: { type: string, minLength: 1, maxLength: 150 }
+        contactName: { type: string, maxLength: 150 }
+        email: { type: string, maxLength: 150 }
+        phone: { type: string, maxLength: 30 }
+        status: { type: string, enum: [trial, active, suspended, inactive] }
+        source: { type: string, enum: [web, commercial, partner] }
+        commercialId: { type: string }
+        ownerId: { type: string }
+    PlatformSalesperson:
+      type: object
+      required: [id, firstName, lastName, email, phone, region, commissionRate, monthlyGoal, active]
+      properties:
+        id: { type: string }
+        firstName: { type: string, maxLength: 100 }
+        lastName: { type: string, maxLength: 100 }
+        email: { type: string, maxLength: 150 }
+        phone: { type: string, maxLength: 30 }
+        region: { type: string, maxLength: 100 }
+        commissionRate: { type: number }
+        monthlyGoal: { type: integer, minimum: 0 }
+        active: { type: boolean }
+    PlatformSalespersonInput:
+      type: object
+      required: [firstName, lastName, email, phone, region, commissionRate, monthlyGoal, active]
+      properties:
+        firstName: { type: string, minLength: 1, maxLength: 100 }
+        lastName: { type: string, minLength: 1, maxLength: 100 }
+        email: { type: string, maxLength: 150 }
+        phone: { type: string, maxLength: 30 }
+        region: { type: string, maxLength: 100 }
+        commissionRate: { type: number, minimum: 0, maximum: 100 }
+        monthlyGoal: { type: integer, minimum: 0 }
+        active: { type: boolean }
+    PlatformSubscription:
+      type: object
+      required: [id, clientId, planId, startDate, durationMonths, endDate, status, amount, commission]
+      properties:
+        id: { type: string }
+        clientId: { type: string }
+        planId: { type: string }
+        startDate: { type: string }
+        durationMonths: { type: integer, minimum: 1 }
+        endDate: { type: string }
+        status: { type: string, enum: [active, cancelled, expired] }
+        amount: { type: integer }
+        commission: { type: integer }
+    PlatformSubscriptionInput:
+      type: object
+      required: [clientId, planId, startDate, durationMonths]
+      properties:
+        clientId: { type: string, minLength: 1 }
+        planId: { type: string, minLength: 1 }
+        startDate: { type: string }
+        durationMonths: { type: integer, minimum: 1, maximum: 36 }
+    PlatformSale:
+      type: object
+      required: [id, clientId, commercialId, source, amount, commission, status, createdAt, label]
+      properties:
+        id: { type: string }
+        clientId: { type: string }
+        commercialId: { type: string }
+        source: { type: string, enum: [web, commercial, partner] }
+        amount: { type: integer }
+        commission: { type: integer }
+        status: { type: string }
+        createdAt: { type: string }
+        label: { type: string }
+    PlatformDashboard:
+      type: object
+      required: [clientsTotal, clientsTrial, clientsActive, mrr, revenueTotal, commissionsTotal, salespeopleCount, recentClients]
+      properties:
+        clientsTotal: { type: integer }
+        clientsTrial: { type: integer }
+        clientsActive: { type: integer }
+        mrr: { type: integer }
+        revenueTotal: { type: integer }
+        commissionsTotal: { type: integer }
+        salespeopleCount: { type: integer }
+        recentClients:
+          type: array
+          items: { $ref: "#/components/schemas/PlatformClient" }

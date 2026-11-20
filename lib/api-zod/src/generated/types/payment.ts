@@ -12,4 +12,5 @@ export type Payment = PaymentInput & {
   receiptNumber: string;
   patientId: string;
   createdAt: string;
+  anonymized?: boolean;
 };

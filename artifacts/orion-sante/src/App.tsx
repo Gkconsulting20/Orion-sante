@@ -20,6 +20,9 @@ import Facturation from "@/pages/facturation";
 import Caisse from "@/pages/caisse";
 import Rapports from "@/pages/rapports";
 import Parametres from "@/pages/parametres";
+import Journal from "@/pages/journal";
+import Utilisateurs from "@/pages/utilisateurs";
+import Commercialisation from "@/pages/commercialisation";
 
 const clerkPubKey = import.meta.env.VITE_CLERK_USE_CONFIGURED_KEY === "true"
   ? import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
@@ -180,6 +183,9 @@ function AppRoutes() {
           <Route path="/caisse" component={Caisse} />
           <Route path="/rapports" component={Rapports} />
           <Route path="/parametres" component={Parametres} />
+          <Route path="/journal" component={Journal} />
+          <Route path="/utilisateurs" component={Utilisateurs} />
+          <Route path="/commercialisation" component={Commercialisation} />
           <Route path="/sign-in/*?" component={SignInPage} />
           <Route path="/sign-up/*?" component={SignUpPage} />
           <Route component={NotFound} />

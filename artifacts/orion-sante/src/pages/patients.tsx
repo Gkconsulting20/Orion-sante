@@ -6,6 +6,7 @@ import { useWorkspace } from "@/hooks/use-clinic";
 import { Empty, ErrorState, PageHeader, PageSkeleton } from "@/components/kit";
 import { PatientDialog } from "@/components/dialogs";
 import { age, fDate, fcfa, fullName, initials, remaining } from "@/lib/fmt";
+import { can, maskPhone, roleOf } from "@/lib/roles";
 
 export default function Patients() {
   const { data: ws, isLoading, error, refetch } = useWorkspace();
@@ -28,11 +29,13 @@ export default function Patients() {
 
   if (isLoading) return <PageSkeleton />;
   if (error || !ws) return <ErrorState error={error} onRetry={() => refetch()} />;
+  const role = roleOf(ws);
+  const canCreate = can(ws, "patients", "write");
 
   return (
     <div>
       <PageHeader eyebrow="Registre" title="Patients" sub={`${ws.patients.length} dossier(s). Recherchez par nom, numéro de dossier ou téléphone.`}
-        actions={<Button onClick={() => setOpen(true)} data-testid="button-new-patient"><Plus className="size-4 mr-1.5" /> Nouveau patient</Button>} />
+        actions={canCreate ? <Button onClick={() => setOpen(true)} data-testid="button-new-patient"><Plus className="size-4 mr-1.5" /> Nouveau patient</Button> : undefined} />
 
       <div className="relative mb-4 max-w-md rise">
         <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -71,7 +74,7 @@ export default function Patients() {
                     </td>
                     <td className="px-4 py-3 num text-xs">{p.number}</td>
                     <td className="px-4 py-3 hidden md:table-cell">{age(p.birthDate) ?? "—"} ans</td>
-                    <td className="px-4 py-3 hidden md:table-cell num text-xs">{p.phone || "—"}</td>
+                    <td className="px-4 py-3 hidden md:table-cell num text-xs">{role === "accountant" ? maskPhone(p.phone) : (p.phone || "—")}</td>
                     <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground">{last ? fDate(last) : "—"}</td>
                     <td className={`px-4 py-3 text-right num ${due > 0 ? "text-destructive" : "text-muted-foreground"}`}>{due > 0 ? fcfa(due) : "—"}</td>
                     <td className="pr-3"><Link href={`/patients/${p.id}`} onClick={(e) => e.stopPropagation()} className="size-7 grid place-items-center rounded-md hover:bg-secondary" aria-label="Ouvrir"><ChevronRight className="size-4" /></Link></td>

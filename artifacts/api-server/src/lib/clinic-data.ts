@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { GetWorkspaceResponse } from "@workspace/api-zod";
+import { GetWorkspaceResponse, type AuditLogEntry, type ClinicRole } from "@workspace/api-zod";
 
 export type ClinicData = Omit<ReturnType<typeof GetWorkspaceResponse.parse>, "isDemo" | "role">;
 export const id = () => randomUUID();
@@ -7,7 +7,53 @@ export const now = () => new Date().toISOString();
 export const day = (date: string) => date.slice(0, 10);
 export const today = () => day(now()); // Togo is UTC year round.
 
-export function initialData(isDemo: boolean): ClinicData {
+/**
+ * Journal d'audit de la clinique. Métadonnées seulement : jamais de données
+ * médicales, jamais de diagnostic, jamais de contenu clinique. Le numéro de
+ * dossier (PAT-0001) suffit à retrouver l'enregistrement concerné.
+ */
+export function auditLog(
+  data: ClinicData,
+  actorId: string,
+  actorLabel: string,
+  action: string,
+  entity: string,
+  recordId: string,
+  detail: string,
+) {
+  const entry: AuditLogEntry = { id: id(), createdAt: now(), actorId, actorLabel, action, entity, recordId, detail };
+  data.auditLog.unshift(entry);
+  data.auditLog = data.auditLog.slice(0, 500);
+}
+
+/** Libellé de l'acteur pour le journal : nom du membre, sinon son rôle. */
+export function actorLabelFor(data: ClinicData, userId: string | null, isDemo: boolean): string {
+  if (isDemo) return "Démonstration";
+  if (!userId) return "Inconnu";
+  const member = data.members.find((m) => m.userId === userId);
+  return member?.name?.trim() || member?.email || "Propriétaire";
+}
+
+/**
+ * Normalise les lignes créées avant l'ajout de la protection des données :
+ * membres et journal absents, consentement non renseigné. Appelé à chaque
+ * chargement de la clinique, en mémoire ; persisté uniquement lors d'une
+ * écriture (withClinic write=true).
+ */
+export function ensureClinicShape(data: ClinicData, ownerUserId: string | null) {
+  if (!Array.isArray(data.members)) data.members = [];
+  if (data.members.length === 0 && ownerUserId) {
+    data.members.push({ userId: ownerUserId, name: "", email: "", role: "owner" as ClinicRole });
+  }
+  if (!Array.isArray(data.auditLog)) data.auditLog = [];
+  for (const p of data.patients) {
+    if (typeof p.consentGiven !== "boolean") p.consentGiven = false;
+    if (p.consentGiven && !p.consentDate) p.consentDate = day(p.createdAt);
+    if (p.consentGiven && !p.consentMethod) p.consentMethod = "oral";
+  }
+}
+
+export function initialData(isDemo: boolean, ownerUserId?: string | null): ClinicData {
   const createdAt = now();
   const settings: ClinicData["settings"] = {
     clinicName: isDemo ? "Clinique de démonstration" : "Mon établissement",
@@ -29,12 +75,18 @@ export function initialData(isDemo: boolean): ClinicData {
     settings, patients: [], visits: [], invoices: [], payments: [], expenses: [],
     cashSession: { isOpen: false, openingBalance: 0, openedAt: "", closedAt: "", closingBalance: 0 },
     activity: [],
+    members: isDemo
+      ? [{ userId: "demo", name: "Démonstration", email: "", role: "owner" as ClinicRole }]
+      : ownerUserId
+        ? [{ userId: ownerUserId, name: "", email: "", role: "owner" as ClinicRole }]
+        : [],
+    auditLog: [],
   };
   if (!isDemo) return data;
   data.patients = [
-    { id: id(), number: "PAT-0001", firstName: "Afi", lastName: "Mensah", sex: "F", birthDate: "1992-05-14", phone: "+228 90 00 00 01", address: "Lomé — données fictives", emergencyContact: "Contact de démonstration", allergies: "Pénicilline (exemple fictif)", createdAt },
-    { id: id(), number: "PAT-0002", firstName: "Kossi", lastName: "Lawson", sex: "M", birthDate: "1984-09-20", phone: "+228 90 00 00 02", address: "Agoè — données fictives", emergencyContact: "", allergies: "", createdAt },
-    { id: id(), number: "PAT-0003", firstName: "Akouvi", lastName: "Amégan", sex: "F", birthDate: "2018-03-08", phone: "+228 90 00 00 03", address: "Adidogomé — données fictives", emergencyContact: "Parent de démonstration", allergies: "", createdAt },
+    { id: id(), number: "PAT-0001", firstName: "Afi", lastName: "Mensah", sex: "F", birthDate: "1992-05-14", phone: "+228 90 00 00 01", address: "Lomé — données fictives", emergencyContact: "Contact de démonstration", allergies: "Pénicilline (exemple fictif)", consentGiven: true, consentDate: today(), consentMethod: "écrit", createdAt },
+    { id: id(), number: "PAT-0002", firstName: "Kossi", lastName: "Lawson", sex: "M", birthDate: "1984-09-20", phone: "+228 90 00 00 02", address: "Agoè — données fictives", emergencyContact: "", allergies: "", consentGiven: false, createdAt },
+    { id: id(), number: "PAT-0003", firstName: "Akouvi", lastName: "Amégan", sex: "F", birthDate: "2018-03-08", phone: "+228 90 00 00 03", address: "Adidogomé — données fictives", emergencyContact: "Parent de démonstration", allergies: "", consentGiven: true, consentDate: today(), consentMethod: "oral", createdAt },
   ];
   data.visits = data.patients.map((p, i) => ({
     id: id(), patientId: p.id, service: settings.services[i]!.name,
@@ -85,6 +137,12 @@ export function initialData(isDemo: boolean): ClinicData {
   data.activity = [
     { id: id(), kind: "payment", label: "Règlement enregistré — démonstration", createdAt },
     { id: id(), kind: "patient", label: "Dossiers patients fictifs créés", createdAt },
+  ];
+  // Journal d'audit fictif, cohérent avec les données de démonstration.
+  data.auditLog = [
+    { id: id(), createdAt, actorId: "demo", actorLabel: "Démonstration", action: "payment.create", entity: "payment", recordId: "REC-1", detail: "Règlement REC-1 — 15 000 FCFA" },
+    { id: id(), createdAt, actorId: "demo", actorLabel: "Démonstration", action: "patient.create", entity: "patient", recordId: "PAT-0001", detail: "Dossier PAT-0001 créé" },
+    { id: id(), createdAt, actorId: "demo", actorLabel: "Démonstration", action: "cash.open", entity: "cash", recordId: "session", detail: "Caisse ouverte" },
   ];
   return data;
 }

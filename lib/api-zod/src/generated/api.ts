@@ -78,6 +78,21 @@ export const getWorkspaceResponseSettingsReceiptFooterMax = 500;
 
 export const getWorkspaceResponseSettingsServicesItemPriceMin = 0;
 
+export const getWorkspaceResponseMembersItemNameMax = 150;
+
+export const getWorkspaceResponseMembersItemEmailMax = 150;
+
+export const getWorkspaceResponsePlanNameMax = 100;
+
+export const getWorkspaceResponsePlanPriceMonthlyMin = 0;
+
+
+
+
+export const getWorkspaceResponsePlanMaxStorageGbMin = 0;
+
+export const getWorkspaceResponsePlanFeaturesMax = 2000;
+
 
 
 export const GetWorkspaceResponse = zod.object({
@@ -91,7 +106,10 @@ export const GetWorkspaceResponse = zod.object({
   "phone": zod.string().max(getWorkspaceResponsePatientsItemOnePhoneMax),
   "address": zod.string().max(getWorkspaceResponsePatientsItemOneAddressMax),
   "emergencyContact": zod.string().max(getWorkspaceResponsePatientsItemOneEmergencyContactMax),
-  "allergies": zod.string().max(getWorkspaceResponsePatientsItemOneAllergiesMax)
+  "allergies": zod.string().max(getWorkspaceResponsePatientsItemOneAllergiesMax),
+  "consentGiven": zod.boolean().optional(),
+  "consentDate": zod.string().optional(),
+  "consentMethod": zod.enum(['oral', 'écrit']).optional()
 }).and(zod.object({
   "id": zod.string(),
   "number": zod.string(),
@@ -128,7 +146,8 @@ export const GetWorkspaceResponse = zod.object({
   "total": zod.number().int(),
   "paid": zod.number().int(),
   "status": zod.enum(['unpaid', 'partial', 'paid']),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "anonymized": zod.boolean().optional()
 }))),
   "payments": zod.array(zod.object({
   "invoiceId": zod.string(),
@@ -140,7 +159,8 @@ export const GetWorkspaceResponse = zod.object({
   "id": zod.string(),
   "receiptNumber": zod.string(),
   "patientId": zod.string(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "anonymized": zod.boolean().optional()
 }))),
   "expenses": zod.array(zod.object({
   "label": zod.string().min(1).max(getWorkspaceResponseExpensesItemOneLabelMax),
@@ -177,7 +197,34 @@ export const GetWorkspaceResponse = zod.object({
   "label": zod.string(),
   "createdAt": zod.string(),
   "kind": zod.string()
-}))
+})),
+  "members": zod.array(zod.object({
+  "userId": zod.string(),
+  "name": zod.string().max(getWorkspaceResponseMembersItemNameMax),
+  "email": zod.string().max(getWorkspaceResponseMembersItemEmailMax),
+  "role": zod.enum(['owner', 'doctor', 'secretary', 'accountant'])
+})),
+  "auditLog": zod.array(zod.object({
+  "id": zod.string(),
+  "createdAt": zod.string(),
+  "actorId": zod.string(),
+  "actorLabel": zod.string(),
+  "action": zod.string(),
+  "entity": zod.string(),
+  "recordId": zod.string(),
+  "detail": zod.string()
+})),
+  "plan": zod.object({
+  "id": zod.string(),
+  "name": zod.string().max(getWorkspaceResponsePlanNameMax),
+  "priceMonthly": zod.number().int().min(getWorkspaceResponsePlanPriceMonthlyMin),
+  "periodMonths": zod.number().int().min(1),
+  "maxUsers": zod.number().int().min(1),
+  "maxPatients": zod.number().int().min(1),
+  "maxStorageGb": zod.number().int().min(getWorkspaceResponsePlanMaxStorageGbMin),
+  "features": zod.string().max(getWorkspaceResponsePlanFeaturesMax),
+  "active": zod.boolean()
+}).optional()
 })
 
 
@@ -225,7 +272,10 @@ export const CreatePatientBody = zod.object({
   "phone": zod.string().max(createPatientBodyPhoneMax),
   "address": zod.string().max(createPatientBodyAddressMax),
   "emergencyContact": zod.string().max(createPatientBodyEmergencyContactMax),
-  "allergies": zod.string().max(createPatientBodyAllergiesMax)
+  "allergies": zod.string().max(createPatientBodyAllergiesMax),
+  "consentGiven": zod.boolean().optional(),
+  "consentDate": zod.string().optional(),
+  "consentMethod": zod.enum(['oral', 'écrit']).optional()
 })
 
 export const createPatientResponseOneFirstNameMax = 100;
@@ -250,7 +300,10 @@ export const CreatePatientResponse = zod.object({
   "phone": zod.string().max(createPatientResponseOnePhoneMax),
   "address": zod.string().max(createPatientResponseOneAddressMax),
   "emergencyContact": zod.string().max(createPatientResponseOneEmergencyContactMax),
-  "allergies": zod.string().max(createPatientResponseOneAllergiesMax)
+  "allergies": zod.string().max(createPatientResponseOneAllergiesMax),
+  "consentGiven": zod.boolean().optional(),
+  "consentDate": zod.string().optional(),
+  "consentMethod": zod.enum(['oral', 'écrit']).optional()
 }).and(zod.object({
   "id": zod.string(),
   "number": zod.string(),
@@ -284,7 +337,10 @@ export const UpdatePatientBody = zod.object({
   "phone": zod.string().max(updatePatientBodyPhoneMax),
   "address": zod.string().max(updatePatientBodyAddressMax),
   "emergencyContact": zod.string().max(updatePatientBodyEmergencyContactMax),
-  "allergies": zod.string().max(updatePatientBodyAllergiesMax)
+  "allergies": zod.string().max(updatePatientBodyAllergiesMax),
+  "consentGiven": zod.boolean().optional(),
+  "consentDate": zod.string().optional(),
+  "consentMethod": zod.enum(['oral', 'écrit']).optional()
 })
 
 export const updatePatientResponseOneFirstNameMax = 100;
@@ -309,12 +365,24 @@ export const UpdatePatientResponse = zod.object({
   "phone": zod.string().max(updatePatientResponseOnePhoneMax),
   "address": zod.string().max(updatePatientResponseOneAddressMax),
   "emergencyContact": zod.string().max(updatePatientResponseOneEmergencyContactMax),
-  "allergies": zod.string().max(updatePatientResponseOneAllergiesMax)
+  "allergies": zod.string().max(updatePatientResponseOneAllergiesMax),
+  "consentGiven": zod.boolean().optional(),
+  "consentDate": zod.string().optional(),
+  "consentMethod": zod.enum(['oral', 'écrit']).optional()
 }).and(zod.object({
   "id": zod.string(),
   "number": zod.string(),
   "createdAt": zod.string()
 }))
+
+
+export const DeletePatientParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeletePatientResponse = zod.object({
+  "ok": zod.boolean()
+})
 
 
 
@@ -513,7 +581,8 @@ export const CreateInvoiceResponse = zod.object({
   "total": zod.number().int(),
   "paid": zod.number().int(),
   "status": zod.enum(['unpaid', 'partial', 'paid']),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "anonymized": zod.boolean().optional()
 }))
 
 
@@ -551,7 +620,8 @@ export const CreatePaymentResponse = zod.object({
   "id": zod.string(),
   "receiptNumber": zod.string(),
   "patientId": zod.string(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "anonymized": zod.boolean().optional()
 }))
 
 
@@ -667,5 +737,757 @@ export const SetCashSessionResponse = zod.object({
   "closedAt": zod.string(),
   "closingBalance": zod.number().int()
 })
+
+
+export const GetAuditLogQueryParams = zod.object({
+  "action": zod.coerce.string().optional(),
+  "entity": zod.coerce.string().optional(),
+  "from": zod.coerce.string().optional(),
+  "to": zod.coerce.string().optional()
+})
+
+export const GetAuditLogResponseItem = zod.object({
+  "id": zod.string(),
+  "createdAt": zod.string(),
+  "actorId": zod.string(),
+  "actorLabel": zod.string(),
+  "action": zod.string(),
+  "entity": zod.string(),
+  "recordId": zod.string(),
+  "detail": zod.string()
+})
+export const GetAuditLogResponse = zod.array(GetAuditLogResponseItem)
+
+
+export const createMemberBodyUserIdMax = 200;
+
+export const createMemberBodyNameMax = 150;
+
+export const createMemberBodyEmailMax = 150;
+
+
+
+export const CreateMemberBody = zod.object({
+  "userId": zod.string().min(1).max(createMemberBodyUserIdMax),
+  "name": zod.string().max(createMemberBodyNameMax),
+  "email": zod.string().max(createMemberBodyEmailMax),
+  "role": zod.enum(['owner', 'doctor', 'secretary', 'accountant'])
+})
+
+export const createMemberResponseNameMax = 150;
+
+export const createMemberResponseEmailMax = 150;
+
+
+
+export const CreateMemberResponse = zod.object({
+  "userId": zod.string(),
+  "name": zod.string().max(createMemberResponseNameMax),
+  "email": zod.string().max(createMemberResponseEmailMax),
+  "role": zod.enum(['owner', 'doctor', 'secretary', 'accountant'])
+})
+
+
+export const UpdateMemberParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const UpdateMemberBody = zod.object({
+  "role": zod.enum(['owner', 'doctor', 'secretary', 'accountant'])
+})
+
+export const updateMemberResponseNameMax = 150;
+
+export const updateMemberResponseEmailMax = 150;
+
+
+
+export const UpdateMemberResponse = zod.object({
+  "userId": zod.string(),
+  "name": zod.string().max(updateMemberResponseNameMax),
+  "email": zod.string().max(updateMemberResponseEmailMax),
+  "role": zod.enum(['owner', 'doctor', 'secretary', 'accountant'])
+})
+
+
+export const DeleteMemberParams = zod.object({
+  "userId": zod.coerce.string()
+})
+
+export const DeleteMemberResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const ExportPatientParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const exportPatientResponsePatientOneFirstNameMax = 100;
+
+export const exportPatientResponsePatientOneLastNameMax = 100;
+
+export const exportPatientResponsePatientOnePhoneMax = 30;
+
+export const exportPatientResponsePatientOneAddressMax = 300;
+
+export const exportPatientResponsePatientOneEmergencyContactMax = 300;
+
+export const exportPatientResponsePatientOneAllergiesMax = 2000;
+
+
+export const exportPatientResponseVisitsItemOneServiceMax = 100;
+
+export const exportPatientResponseVisitsItemOnePractitionerMax = 100;
+
+export const exportPatientResponseVisitsItemOneReasonMax = 1000;
+
+export const exportPatientResponseVisitsItemOneNotesMax = 10000;
+
+export const exportPatientResponseVisitsItemOnePrescriptionMax = 5000;
+
+export const exportPatientResponseVisitsItemOneTemperatureMax = 20;
+
+export const exportPatientResponseVisitsItemOneBloodPressureMax = 30;
+
+export const exportPatientResponseVisitsItemOneWeightMax = 20;
+
+
+
+export const exportPatientResponseInvoicesItemOneLinesItemLabelMax = 200;
+
+export const exportPatientResponseInvoicesItemOneLinesItemQuantityMax = 1000;
+
+export const exportPatientResponseInvoicesItemOneLinesItemUnitPriceMin = 0;
+export const exportPatientResponseInvoicesItemOneLinesItemUnitPriceMax = 100000000;
+
+export const exportPatientResponseInvoicesItemOneLinesMax = 100;
+
+export const exportPatientResponsePaymentsItemOneAmountMax = 100000000;
+
+export const exportPatientResponsePaymentsItemOneReferenceMax = 100;
+
+export const exportPatientResponsePaymentsItemOneRequestIdMax = 100;
+
+
+
+export const ExportPatientResponse = zod.object({
+  "patient": zod.object({
+  "firstName": zod.string().min(1).max(exportPatientResponsePatientOneFirstNameMax),
+  "lastName": zod.string().min(1).max(exportPatientResponsePatientOneLastNameMax),
+  "sex": zod.enum(['F', 'M']),
+  "birthDate": zod.string(),
+  "phone": zod.string().max(exportPatientResponsePatientOnePhoneMax),
+  "address": zod.string().max(exportPatientResponsePatientOneAddressMax),
+  "emergencyContact": zod.string().max(exportPatientResponsePatientOneEmergencyContactMax),
+  "allergies": zod.string().max(exportPatientResponsePatientOneAllergiesMax),
+  "consentGiven": zod.boolean().optional(),
+  "consentDate": zod.string().optional(),
+  "consentMethod": zod.enum(['oral', 'écrit']).optional()
+}).and(zod.object({
+  "id": zod.string(),
+  "number": zod.string(),
+  "createdAt": zod.string()
+})),
+  "visits": zod.array(zod.object({
+  "patientId": zod.string().min(1),
+  "service": zod.string().min(1).max(exportPatientResponseVisitsItemOneServiceMax),
+  "practitioner": zod.string().min(1).max(exportPatientResponseVisitsItemOnePractitionerMax),
+  "scheduledAt": zod.string(),
+  "status": zod.enum(['scheduled', 'waiting', 'in_progress', 'completed', 'cancelled']),
+  "reason": zod.string().max(exportPatientResponseVisitsItemOneReasonMax),
+  "notes": zod.string().max(exportPatientResponseVisitsItemOneNotesMax),
+  "prescription": zod.string().max(exportPatientResponseVisitsItemOnePrescriptionMax),
+  "temperature": zod.string().max(exportPatientResponseVisitsItemOneTemperatureMax),
+  "bloodPressure": zod.string().max(exportPatientResponseVisitsItemOneBloodPressureMax),
+  "weight": zod.string().max(exportPatientResponseVisitsItemOneWeightMax)
+}).and(zod.object({
+  "id": zod.string(),
+  "createdAt": zod.string()
+}))),
+  "invoices": zod.array(zod.object({
+  "patientId": zod.string().min(1),
+  "visitId": zod.string().optional(),
+  "service": zod.string().min(1),
+  "lines": zod.array(zod.object({
+  "label": zod.string().min(1).max(exportPatientResponseInvoicesItemOneLinesItemLabelMax),
+  "quantity": zod.number().int().min(1).max(exportPatientResponseInvoicesItemOneLinesItemQuantityMax),
+  "unitPrice": zod.number().int().min(exportPatientResponseInvoicesItemOneLinesItemUnitPriceMin).max(exportPatientResponseInvoicesItemOneLinesItemUnitPriceMax)
+})).min(1).max(exportPatientResponseInvoicesItemOneLinesMax)
+}).and(zod.object({
+  "id": zod.string(),
+  "number": zod.string(),
+  "total": zod.number().int(),
+  "paid": zod.number().int(),
+  "status": zod.enum(['unpaid', 'partial', 'paid']),
+  "createdAt": zod.string(),
+  "anonymized": zod.boolean().optional()
+}))),
+  "payments": zod.array(zod.object({
+  "invoiceId": zod.string(),
+  "amount": zod.number().int().min(1).max(exportPatientResponsePaymentsItemOneAmountMax),
+  "method": zod.enum(['cash', 'tmoney', 'flooz', 'bank']),
+  "reference": zod.string().max(exportPatientResponsePaymentsItemOneReferenceMax),
+  "requestId": zod.string().min(1).max(exportPatientResponsePaymentsItemOneRequestIdMax)
+}).and(zod.object({
+  "id": zod.string(),
+  "receiptNumber": zod.string(),
+  "patientId": zod.string(),
+  "createdAt": zod.string(),
+  "anonymized": zod.boolean().optional()
+})))
+})
+
+
+export const GetPlatformMeResponse = zod.object({
+  "isPlatformAdmin": zod.boolean()
+})
+
+
+export const getPlatformDashboardResponseRecentClientsItemClinicNameMax = 150;
+
+export const getPlatformDashboardResponseRecentClientsItemContactNameMax = 150;
+
+export const getPlatformDashboardResponseRecentClientsItemEmailMax = 150;
+
+export const getPlatformDashboardResponseRecentClientsItemPhoneMax = 30;
+
+
+
+export const GetPlatformDashboardResponse = zod.object({
+  "clientsTotal": zod.number().int(),
+  "clientsTrial": zod.number().int(),
+  "clientsActive": zod.number().int(),
+  "mrr": zod.number().int(),
+  "revenueTotal": zod.number().int(),
+  "commissionsTotal": zod.number().int(),
+  "salespeopleCount": zod.number().int(),
+  "recentClients": zod.array(zod.object({
+  "id": zod.string(),
+  "clinicName": zod.string().max(getPlatformDashboardResponseRecentClientsItemClinicNameMax),
+  "contactName": zod.string().max(getPlatformDashboardResponseRecentClientsItemContactNameMax),
+  "email": zod.string().max(getPlatformDashboardResponseRecentClientsItemEmailMax),
+  "phone": zod.string().max(getPlatformDashboardResponseRecentClientsItemPhoneMax),
+  "status": zod.enum(['trial', 'active', 'suspended', 'inactive']),
+  "source": zod.enum(['web', 'commercial', 'partner']),
+  "commercialId": zod.string(),
+  "ownerId": zod.string(),
+  "planId": zod.string(),
+  "planAmount": zod.number().int(),
+  "createdAt": zod.string(),
+  "lastLoginAt": zod.string()
+}))
+})
+
+
+export const getPlatformClientsResponseClinicNameMax = 150;
+
+export const getPlatformClientsResponseContactNameMax = 150;
+
+export const getPlatformClientsResponseEmailMax = 150;
+
+export const getPlatformClientsResponsePhoneMax = 30;
+
+
+
+export const GetPlatformClientsResponseItem = zod.object({
+  "id": zod.string(),
+  "clinicName": zod.string().max(getPlatformClientsResponseClinicNameMax),
+  "contactName": zod.string().max(getPlatformClientsResponseContactNameMax),
+  "email": zod.string().max(getPlatformClientsResponseEmailMax),
+  "phone": zod.string().max(getPlatformClientsResponsePhoneMax),
+  "status": zod.enum(['trial', 'active', 'suspended', 'inactive']),
+  "source": zod.enum(['web', 'commercial', 'partner']),
+  "commercialId": zod.string(),
+  "ownerId": zod.string(),
+  "planId": zod.string(),
+  "planAmount": zod.number().int(),
+  "createdAt": zod.string(),
+  "lastLoginAt": zod.string()
+})
+export const GetPlatformClientsResponse = zod.array(GetPlatformClientsResponseItem)
+
+
+export const createPlatformClientBodyClinicNameMax = 150;
+
+export const createPlatformClientBodyContactNameMax = 150;
+
+export const createPlatformClientBodyEmailMax = 150;
+
+export const createPlatformClientBodyPhoneMax = 30;
+
+
+
+export const CreatePlatformClientBody = zod.object({
+  "clinicName": zod.string().min(1).max(createPlatformClientBodyClinicNameMax),
+  "contactName": zod.string().max(createPlatformClientBodyContactNameMax),
+  "email": zod.string().max(createPlatformClientBodyEmailMax),
+  "phone": zod.string().max(createPlatformClientBodyPhoneMax),
+  "source": zod.enum(['web', 'commercial', 'partner']),
+  "commercialId": zod.string(),
+  "ownerId": zod.string()
+})
+
+export const createPlatformClientResponseClinicNameMax = 150;
+
+export const createPlatformClientResponseContactNameMax = 150;
+
+export const createPlatformClientResponseEmailMax = 150;
+
+export const createPlatformClientResponsePhoneMax = 30;
+
+
+
+export const CreatePlatformClientResponse = zod.object({
+  "id": zod.string(),
+  "clinicName": zod.string().max(createPlatformClientResponseClinicNameMax),
+  "contactName": zod.string().max(createPlatformClientResponseContactNameMax),
+  "email": zod.string().max(createPlatformClientResponseEmailMax),
+  "phone": zod.string().max(createPlatformClientResponsePhoneMax),
+  "status": zod.enum(['trial', 'active', 'suspended', 'inactive']),
+  "source": zod.enum(['web', 'commercial', 'partner']),
+  "commercialId": zod.string(),
+  "ownerId": zod.string(),
+  "planId": zod.string(),
+  "planAmount": zod.number().int(),
+  "createdAt": zod.string(),
+  "lastLoginAt": zod.string()
+})
+
+
+export const UpdatePlatformClientParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const updatePlatformClientBodyClinicNameMax = 150;
+
+export const updatePlatformClientBodyContactNameMax = 150;
+
+export const updatePlatformClientBodyEmailMax = 150;
+
+export const updatePlatformClientBodyPhoneMax = 30;
+
+
+
+export const UpdatePlatformClientBody = zod.object({
+  "clinicName": zod.string().min(1).max(updatePlatformClientBodyClinicNameMax),
+  "contactName": zod.string().max(updatePlatformClientBodyContactNameMax),
+  "email": zod.string().max(updatePlatformClientBodyEmailMax),
+  "phone": zod.string().max(updatePlatformClientBodyPhoneMax),
+  "status": zod.enum(['trial', 'active', 'suspended', 'inactive']),
+  "source": zod.enum(['web', 'commercial', 'partner']),
+  "commercialId": zod.string(),
+  "ownerId": zod.string()
+})
+
+export const updatePlatformClientResponseClinicNameMax = 150;
+
+export const updatePlatformClientResponseContactNameMax = 150;
+
+export const updatePlatformClientResponseEmailMax = 150;
+
+export const updatePlatformClientResponsePhoneMax = 30;
+
+
+
+export const UpdatePlatformClientResponse = zod.object({
+  "id": zod.string(),
+  "clinicName": zod.string().max(updatePlatformClientResponseClinicNameMax),
+  "contactName": zod.string().max(updatePlatformClientResponseContactNameMax),
+  "email": zod.string().max(updatePlatformClientResponseEmailMax),
+  "phone": zod.string().max(updatePlatformClientResponsePhoneMax),
+  "status": zod.enum(['trial', 'active', 'suspended', 'inactive']),
+  "source": zod.enum(['web', 'commercial', 'partner']),
+  "commercialId": zod.string(),
+  "ownerId": zod.string(),
+  "planId": zod.string(),
+  "planAmount": zod.number().int(),
+  "createdAt": zod.string(),
+  "lastLoginAt": zod.string()
+})
+
+
+export const DeletePlatformClientParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeletePlatformClientResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const getPlatformSalespeopleResponseFirstNameMax = 100;
+
+export const getPlatformSalespeopleResponseLastNameMax = 100;
+
+export const getPlatformSalespeopleResponseEmailMax = 150;
+
+export const getPlatformSalespeopleResponsePhoneMax = 30;
+
+export const getPlatformSalespeopleResponseRegionMax = 100;
+
+export const getPlatformSalespeopleResponseMonthlyGoalMin = 0;
+
+
+
+export const GetPlatformSalespeopleResponseItem = zod.object({
+  "id": zod.string(),
+  "firstName": zod.string().max(getPlatformSalespeopleResponseFirstNameMax),
+  "lastName": zod.string().max(getPlatformSalespeopleResponseLastNameMax),
+  "email": zod.string().max(getPlatformSalespeopleResponseEmailMax),
+  "phone": zod.string().max(getPlatformSalespeopleResponsePhoneMax),
+  "region": zod.string().max(getPlatformSalespeopleResponseRegionMax),
+  "commissionRate": zod.number(),
+  "monthlyGoal": zod.number().int().min(getPlatformSalespeopleResponseMonthlyGoalMin),
+  "active": zod.boolean()
+})
+export const GetPlatformSalespeopleResponse = zod.array(GetPlatformSalespeopleResponseItem)
+
+
+export const createPlatformSalespersonBodyFirstNameMax = 100;
+
+export const createPlatformSalespersonBodyLastNameMax = 100;
+
+export const createPlatformSalespersonBodyEmailMax = 150;
+
+export const createPlatformSalespersonBodyPhoneMax = 30;
+
+export const createPlatformSalespersonBodyRegionMax = 100;
+
+export const createPlatformSalespersonBodyCommissionRateMin = 0;
+export const createPlatformSalespersonBodyCommissionRateMax = 100;
+
+export const createPlatformSalespersonBodyMonthlyGoalMin = 0;
+
+
+
+export const CreatePlatformSalespersonBody = zod.object({
+  "firstName": zod.string().min(1).max(createPlatformSalespersonBodyFirstNameMax),
+  "lastName": zod.string().min(1).max(createPlatformSalespersonBodyLastNameMax),
+  "email": zod.string().max(createPlatformSalespersonBodyEmailMax),
+  "phone": zod.string().max(createPlatformSalespersonBodyPhoneMax),
+  "region": zod.string().max(createPlatformSalespersonBodyRegionMax),
+  "commissionRate": zod.number().min(createPlatformSalespersonBodyCommissionRateMin).max(createPlatformSalespersonBodyCommissionRateMax),
+  "monthlyGoal": zod.number().int().min(createPlatformSalespersonBodyMonthlyGoalMin),
+  "active": zod.boolean()
+})
+
+export const createPlatformSalespersonResponseFirstNameMax = 100;
+
+export const createPlatformSalespersonResponseLastNameMax = 100;
+
+export const createPlatformSalespersonResponseEmailMax = 150;
+
+export const createPlatformSalespersonResponsePhoneMax = 30;
+
+export const createPlatformSalespersonResponseRegionMax = 100;
+
+export const createPlatformSalespersonResponseMonthlyGoalMin = 0;
+
+
+
+export const CreatePlatformSalespersonResponse = zod.object({
+  "id": zod.string(),
+  "firstName": zod.string().max(createPlatformSalespersonResponseFirstNameMax),
+  "lastName": zod.string().max(createPlatformSalespersonResponseLastNameMax),
+  "email": zod.string().max(createPlatformSalespersonResponseEmailMax),
+  "phone": zod.string().max(createPlatformSalespersonResponsePhoneMax),
+  "region": zod.string().max(createPlatformSalespersonResponseRegionMax),
+  "commissionRate": zod.number(),
+  "monthlyGoal": zod.number().int().min(createPlatformSalespersonResponseMonthlyGoalMin),
+  "active": zod.boolean()
+})
+
+
+export const UpdatePlatformSalespersonParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const updatePlatformSalespersonBodyFirstNameMax = 100;
+
+export const updatePlatformSalespersonBodyLastNameMax = 100;
+
+export const updatePlatformSalespersonBodyEmailMax = 150;
+
+export const updatePlatformSalespersonBodyPhoneMax = 30;
+
+export const updatePlatformSalespersonBodyRegionMax = 100;
+
+export const updatePlatformSalespersonBodyCommissionRateMin = 0;
+export const updatePlatformSalespersonBodyCommissionRateMax = 100;
+
+export const updatePlatformSalespersonBodyMonthlyGoalMin = 0;
+
+
+
+export const UpdatePlatformSalespersonBody = zod.object({
+  "firstName": zod.string().min(1).max(updatePlatformSalespersonBodyFirstNameMax),
+  "lastName": zod.string().min(1).max(updatePlatformSalespersonBodyLastNameMax),
+  "email": zod.string().max(updatePlatformSalespersonBodyEmailMax),
+  "phone": zod.string().max(updatePlatformSalespersonBodyPhoneMax),
+  "region": zod.string().max(updatePlatformSalespersonBodyRegionMax),
+  "commissionRate": zod.number().min(updatePlatformSalespersonBodyCommissionRateMin).max(updatePlatformSalespersonBodyCommissionRateMax),
+  "monthlyGoal": zod.number().int().min(updatePlatformSalespersonBodyMonthlyGoalMin),
+  "active": zod.boolean()
+})
+
+export const updatePlatformSalespersonResponseFirstNameMax = 100;
+
+export const updatePlatformSalespersonResponseLastNameMax = 100;
+
+export const updatePlatformSalespersonResponseEmailMax = 150;
+
+export const updatePlatformSalespersonResponsePhoneMax = 30;
+
+export const updatePlatformSalespersonResponseRegionMax = 100;
+
+export const updatePlatformSalespersonResponseMonthlyGoalMin = 0;
+
+
+
+export const UpdatePlatformSalespersonResponse = zod.object({
+  "id": zod.string(),
+  "firstName": zod.string().max(updatePlatformSalespersonResponseFirstNameMax),
+  "lastName": zod.string().max(updatePlatformSalespersonResponseLastNameMax),
+  "email": zod.string().max(updatePlatformSalespersonResponseEmailMax),
+  "phone": zod.string().max(updatePlatformSalespersonResponsePhoneMax),
+  "region": zod.string().max(updatePlatformSalespersonResponseRegionMax),
+  "commissionRate": zod.number(),
+  "monthlyGoal": zod.number().int().min(updatePlatformSalespersonResponseMonthlyGoalMin),
+  "active": zod.boolean()
+})
+
+
+export const DeletePlatformSalespersonParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeletePlatformSalespersonResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+export const getPlatformPlansResponseNameMax = 100;
+
+export const getPlatformPlansResponsePriceMonthlyMin = 0;
+
+
+
+
+export const getPlatformPlansResponseMaxStorageGbMin = 0;
+
+export const getPlatformPlansResponseFeaturesMax = 2000;
+
+
+
+export const GetPlatformPlansResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string().max(getPlatformPlansResponseNameMax),
+  "priceMonthly": zod.number().int().min(getPlatformPlansResponsePriceMonthlyMin),
+  "periodMonths": zod.number().int().min(1),
+  "maxUsers": zod.number().int().min(1),
+  "maxPatients": zod.number().int().min(1),
+  "maxStorageGb": zod.number().int().min(getPlatformPlansResponseMaxStorageGbMin),
+  "features": zod.string().max(getPlatformPlansResponseFeaturesMax),
+  "active": zod.boolean()
+})
+export const GetPlatformPlansResponse = zod.array(GetPlatformPlansResponseItem)
+
+
+export const createPlatformPlanBodyNameMax = 100;
+
+export const createPlatformPlanBodyPriceMonthlyMin = 0;
+
+
+
+
+export const createPlatformPlanBodyMaxStorageGbMin = 0;
+
+export const createPlatformPlanBodyFeaturesMax = 2000;
+
+
+
+export const CreatePlatformPlanBody = zod.object({
+  "name": zod.string().min(1).max(createPlatformPlanBodyNameMax),
+  "priceMonthly": zod.number().int().min(createPlatformPlanBodyPriceMonthlyMin),
+  "periodMonths": zod.number().int().min(1),
+  "maxUsers": zod.number().int().min(1),
+  "maxPatients": zod.number().int().min(1),
+  "maxStorageGb": zod.number().int().min(createPlatformPlanBodyMaxStorageGbMin),
+  "features": zod.string().max(createPlatformPlanBodyFeaturesMax),
+  "active": zod.boolean()
+})
+
+export const createPlatformPlanResponseNameMax = 100;
+
+export const createPlatformPlanResponsePriceMonthlyMin = 0;
+
+
+
+
+export const createPlatformPlanResponseMaxStorageGbMin = 0;
+
+export const createPlatformPlanResponseFeaturesMax = 2000;
+
+
+
+export const CreatePlatformPlanResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string().max(createPlatformPlanResponseNameMax),
+  "priceMonthly": zod.number().int().min(createPlatformPlanResponsePriceMonthlyMin),
+  "periodMonths": zod.number().int().min(1),
+  "maxUsers": zod.number().int().min(1),
+  "maxPatients": zod.number().int().min(1),
+  "maxStorageGb": zod.number().int().min(createPlatformPlanResponseMaxStorageGbMin),
+  "features": zod.string().max(createPlatformPlanResponseFeaturesMax),
+  "active": zod.boolean()
+})
+
+
+export const UpdatePlatformPlanParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const updatePlatformPlanBodyNameMax = 100;
+
+export const updatePlatformPlanBodyPriceMonthlyMin = 0;
+
+
+
+
+export const updatePlatformPlanBodyMaxStorageGbMin = 0;
+
+export const updatePlatformPlanBodyFeaturesMax = 2000;
+
+
+
+export const UpdatePlatformPlanBody = zod.object({
+  "name": zod.string().min(1).max(updatePlatformPlanBodyNameMax),
+  "priceMonthly": zod.number().int().min(updatePlatformPlanBodyPriceMonthlyMin),
+  "periodMonths": zod.number().int().min(1),
+  "maxUsers": zod.number().int().min(1),
+  "maxPatients": zod.number().int().min(1),
+  "maxStorageGb": zod.number().int().min(updatePlatformPlanBodyMaxStorageGbMin),
+  "features": zod.string().max(updatePlatformPlanBodyFeaturesMax),
+  "active": zod.boolean()
+})
+
+export const updatePlatformPlanResponseNameMax = 100;
+
+export const updatePlatformPlanResponsePriceMonthlyMin = 0;
+
+
+
+
+export const updatePlatformPlanResponseMaxStorageGbMin = 0;
+
+export const updatePlatformPlanResponseFeaturesMax = 2000;
+
+
+
+export const UpdatePlatformPlanResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string().max(updatePlatformPlanResponseNameMax),
+  "priceMonthly": zod.number().int().min(updatePlatformPlanResponsePriceMonthlyMin),
+  "periodMonths": zod.number().int().min(1),
+  "maxUsers": zod.number().int().min(1),
+  "maxPatients": zod.number().int().min(1),
+  "maxStorageGb": zod.number().int().min(updatePlatformPlanResponseMaxStorageGbMin),
+  "features": zod.string().max(updatePlatformPlanResponseFeaturesMax),
+  "active": zod.boolean()
+})
+
+
+export const DeletePlatformPlanParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeletePlatformPlanResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+
+
+
+export const GetPlatformSubscriptionsResponseItem = zod.object({
+  "id": zod.string(),
+  "clientId": zod.string(),
+  "planId": zod.string(),
+  "startDate": zod.string(),
+  "durationMonths": zod.number().int().min(1),
+  "endDate": zod.string(),
+  "status": zod.enum(['active', 'cancelled', 'expired']),
+  "amount": zod.number().int(),
+  "commission": zod.number().int()
+})
+export const GetPlatformSubscriptionsResponse = zod.array(GetPlatformSubscriptionsResponseItem)
+
+
+
+
+export const createPlatformSubscriptionBodyDurationMonthsMax = 36;
+
+
+
+export const CreatePlatformSubscriptionBody = zod.object({
+  "clientId": zod.string().min(1),
+  "planId": zod.string().min(1),
+  "startDate": zod.string(),
+  "durationMonths": zod.number().int().min(1).max(createPlatformSubscriptionBodyDurationMonthsMax)
+})
+
+
+
+
+export const CreatePlatformSubscriptionResponse = zod.object({
+  "id": zod.string(),
+  "clientId": zod.string(),
+  "planId": zod.string(),
+  "startDate": zod.string(),
+  "durationMonths": zod.number().int().min(1),
+  "endDate": zod.string(),
+  "status": zod.enum(['active', 'cancelled', 'expired']),
+  "amount": zod.number().int(),
+  "commission": zod.number().int()
+})
+
+
+export const CancelPlatformSubscriptionParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+
+
+export const CancelPlatformSubscriptionResponse = zod.object({
+  "id": zod.string(),
+  "clientId": zod.string(),
+  "planId": zod.string(),
+  "startDate": zod.string(),
+  "durationMonths": zod.number().int().min(1),
+  "endDate": zod.string(),
+  "status": zod.enum(['active', 'cancelled', 'expired']),
+  "amount": zod.number().int(),
+  "commission": zod.number().int()
+})
+
+
+export const GetPlatformSalesQueryParams = zod.object({
+  "source": zod.coerce.string().optional()
+})
+
+export const GetPlatformSalesResponseItem = zod.object({
+  "id": zod.string(),
+  "clientId": zod.string(),
+  "commercialId": zod.string(),
+  "source": zod.enum(['web', 'commercial', 'partner']),
+  "amount": zod.number().int(),
+  "commission": zod.number().int(),
+  "status": zod.string(),
+  "createdAt": zod.string(),
+  "label": zod.string()
+})
+export const GetPlatformSalesResponse = zod.array(GetPlatformSalesResponseItem)
 
 

@@ -6,11 +6,14 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Activity } from './activity';
+import type { AuditLogEntry } from './auditLogEntry';
 import type { CashSession } from './cashSession';
 import type { Expense } from './expense';
 import type { Invoice } from './invoice';
+import type { Member } from './member';
 import type { Patient } from './patient';
 import type { Payment } from './payment';
+import type { PlatformPlan } from './platformPlan';
 import type { Settings } from './settings';
 import type { Visit } from './visit';
 
@@ -25,4 +28,7 @@ export interface Workspace {
   settings: Settings;
   cashSession: CashSession;
   activity: Activity[];
+  members: Member[];
+  auditLog: AuditLogEntry[];
+  plan?: PlatformPlan;
 }

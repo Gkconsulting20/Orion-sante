@@ -7,7 +7,7 @@ import { useWorkspace } from "@/hooks/use-clinic";
 import { Empty, ErrorState, InvoiceBadge, PageHeader, PageSkeleton, Stat, Tabs } from "@/components/kit";
 import { InvoiceDialog, PaymentDialog, ReceiptDialog } from "@/components/dialogs";
 import { InvoiceDoc, usePrint } from "@/components/print";
-import { METHOD, fDate, fDateTime, fcfa, fullName, num, remaining } from "@/lib/fmt";
+import { METHOD, fDate, fDateTime, fcfa, fullName, num, patientDisplayName, remaining } from "@/lib/fmt";
 
 type F = "open" | "all" | "paid";
 
@@ -81,7 +81,7 @@ export default function Facturation() {
                     {list.map((i) => (
                       <tr key={i.id} className="border-b last:border-0 row-hover" data-testid={`row-invoice-${i.id}`}>
                         <td className="px-4 py-3"><div className="num text-xs">{i.number}</div><div className="text-xs text-muted-foreground">{fDate(i.createdAt)} · {i.service}</div></td>
-                        <td className="px-4 py-3"><Link href={`/patients/${i.patientId}`} className="hover:underline">{fullName(pOf(i.patientId))}</Link></td>
+                        <td className="px-4 py-3"><Link href={`/patients/${i.patientId}`} className="hover:underline">{patientDisplayName(pOf(i.patientId), i.anonymized)}</Link></td>
                         <td className="px-4 py-3 text-right num hidden md:table-cell">{num(i.total)}</td>
                         <td className="px-4 py-3 text-right num text-lagoon hidden md:table-cell">{num(i.paid)}</td>
                         <td className={`px-4 py-3 text-right num font-medium ${remaining(i) ? "text-destructive" : "text-muted-foreground"}`}>{num(remaining(i))}</td>
@@ -109,7 +109,7 @@ export default function Facturation() {
                 <li key={p.id}>
                   <button className="w-full text-left px-4 py-3 row-hover flex gap-3 items-center" onClick={() => setReceipt(p)} data-testid={`button-receipt-${p.id}`}>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm truncate">{fullName(pOf(p.patientId))}</div>
+                      <div className="text-sm truncate">{patientDisplayName(pOf(p.patientId), p.anonymized)}</div>
                       <div className="text-[11px] text-muted-foreground num">{p.receiptNumber} · {METHOD[p.method]}</div>
                       <div className="text-[11px] text-muted-foreground">{fDateTime(p.createdAt)}</div>
                     </div>
