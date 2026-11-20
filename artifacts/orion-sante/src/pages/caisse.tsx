@@ -70,9 +70,9 @@ export default function Caisse() {
               <div className="mt-4 label-s !text-current opacity-70">Espèces attendues en caisse</div>
               <div className="num text-3xl font-semibold mt-1" data-testid="text-expected-cash">{fcfa(expected)}</div>
               <dl className="grid grid-cols-3 gap-2 mt-4 text-xs">
-                <div><dt className="opacity-60">Fond</dt><dd className="num">{num(cs.openingBalance)}</dd></div>
-                <div><dt className="opacity-60">Entrées</dt><dd className="num">+{num(cashIn)}</dd></div>
-                <div><dt className="opacity-60">Sorties</dt><dd className="num">-{num(cashOut)}</dd></div>
+                <div><dt className="opacity-60">Fond de caisse</dt><dd className="num">{num(cs.openingBalance)}</dd></div>
+                <div><dt className="opacity-60">Entrées espèces</dt><dd className="num">+{num(cashIn)}</dd></div>
+                <div><dt className="opacity-60">Sorties espèces</dt><dd className="num">-{num(cashOut)}</dd></div>
               </dl>
               <Button variant="secondary" className="w-full mt-5" disabled={setCash.isPending} onClick={() => toggle("close")} data-testid="button-close-cash">
                 {setCash.isPending ? <Loader2 className="size-4 mr-2 animate-spin" /> : <Lock className="size-4 mr-2" />} Fermer la caisse
@@ -92,9 +92,9 @@ export default function Caisse() {
           {cashErr && <p className="text-xs text-destructive mt-2">{cashErr}</p>}
         </section>
         <div className="grid grid-cols-2 gap-3 content-start">
-          <Stat label="Entrées (filtre)" value={fcfa(totIn)} tone="lagoon" />
-          <Stat label="Sorties (filtre)" value={fcfa(totOut)} tone="saffron" />
-          <Stat label="Solde net (filtre)" value={fcfa(totIn - totOut)} className="col-span-2" hint="Calcul opérationnel sur les mouvements enregistrés." />
+          <Stat label="Entrées (filtre)" value={fcfa(totIn)} tone="lagoon" hint="Tous modes de paiement, suivant le filtre." />
+          <Stat label="Sorties (filtre)" value={fcfa(totOut)} tone="saffron" hint="Tous modes de paiement, suivant le filtre." />
+          <Stat label="Solde net (filtre)" value={fcfa(totIn - totOut)} className="col-span-2" hint="Mouvements enregistrés, tous modes de paiement, suivant les filtres. Ce n'est pas le solde des espèces en caisse (voir panneau de session)." />
         </div>
       </div>
 

@@ -68,7 +68,7 @@ export default function Dashboard() {
             <div className="flex gap-5 text-right">
               <div><div className="label-s">Recettes du mois</div><div className="num font-semibold text-lagoon">{fcfa(d.receiptsMonth)}</div></div>
               <div><div className="label-s">Dépenses</div><div className="num font-semibold">{fcfa(d.expensesMonth)}</div></div>
-              <div><div className="label-s">Solde</div><div className={`num font-semibold ${net < 0 ? "text-destructive" : ""}`}>{fcfa(net)}</div></div>
+              <div><div className="label-s">Résultat du mois</div><div className={`num font-semibold ${net < 0 ? "text-destructive" : ""}`}>{fcfa(net)}</div></div>
             </div>
           </div>
           {d.revenue.length === 0 ? (

@@ -67,11 +67,21 @@ export function initialData(isDemo: boolean): ClinicData {
       receiptNumber: `REC-${date.getUTCFullYear()}-${String(i + 1).padStart(4, "0")}`, createdAt: timestamp,
     });
   }
+  // La caisse ouvre aujourd'hui à 06:00 avec les espèces déjà en caisse : les
+  // règlements en espèces des jours précédents, non encore versés en banque.
+  // Ainsi le circuit de l'argent se boucle : espèces reçues − espèces dépensées
+  // = espèces attendues en caisse. Les dépenses sont horodatées après
+  // l'ouverture pour appartenir à la session ; l'une d'elles est en espèces
+  // afin que le circuit des sorties de caisse soit visible dans la démo.
+  const sessionOpenedAt = `${today()}T06:00:00.000Z`;
+  const cashBeforeSession = data.payments
+    .filter((p) => p.method === "cash" && p.createdAt < sessionOpenedAt)
+    .reduce((s, p) => s + p.amount, 0);
   data.expenses.push(
-    { id: id(), label: "Consommables médicaux", supplier: "Fournisseur de démonstration", category: "supplies", amount: 12000, method: "bank", createdAt },
-    { id: id(), label: "Électricité", supplier: "Exemple fictif", category: "utilities", amount: 5000, method: "tmoney", createdAt },
+    { id: id(), label: "Consommables médicaux", supplier: "Fournisseur de démonstration", category: "supplies", amount: 12000, method: "bank", createdAt: `${today()}T09:00:00.000Z` },
+    { id: id(), label: "Électricité", supplier: "Exemple fictif", category: "utilities", amount: 5000, method: "cash", createdAt: `${today()}T10:00:00.000Z` },
   );
-  data.cashSession = { isOpen: true, openingBalance: 25000, openedAt: `${today()}T06:00:00.000Z`, closedAt: "", closingBalance: 0 };
+  data.cashSession = { isOpen: true, openingBalance: cashBeforeSession, openedAt: sessionOpenedAt, closedAt: "", closingBalance: 0 };
   data.activity = [
     { id: id(), kind: "payment", label: "Règlement enregistré — démonstration", createdAt },
     { id: id(), kind: "patient", label: "Dossiers patients fictifs créés", createdAt },
